@@ -560,7 +560,11 @@ img[data-fb]{aspect-ratio:63/88;object-fit:contain;padding:18%;background:radial
 .cf.mini .shine,.cf.mini .glare{display:none}
 /* large views tilt toward the pointer like a card in your hand */
 .overlay .cf.lit,.cgrid .cf.lit,.pack .cf.lit{transform:perspective(900px) rotateY(var(--tx)) rotateX(var(--ty));transition:transform .08s}
+.pack .flip:not(.shown) .cf.lit{transform:rotateY(180deg) perspective(900px) rotateY(var(--tx)) rotateX(var(--ty))}   /* still turning over */
 .overlay .cf,.cgrid .cf,.pack .cf{transition:transform .5s cubic-bezier(.2,.8,.3,1)}
+/* touch: a sideways drag tilts the card, a mostly upright swipe scrolls; the enlarged card tilts any way when it fits */
+.cgrid .cf,.pack .cf,.insp .cf{touch-action:pan-y;touch-action:pan-y pinch-zoom}
+@media (min-height:540px){.insp .cf{touch-action:none}}
 .cgrid .cf:not(:hover) .shine,.hand .cf:not(:hover) .shine{animation-play-state:paused}
 .cnt .fcnt{font-style:normal;color:#ffe9a8;margin-left:3px}
 .unbtog{margin-top:6px;width:100%;font-size:11px}
@@ -758,6 +762,14 @@ select,input[type=text],input[type=search],input[type=password]{background:var(-
 .olhelp > p{font-size:12.5px;margin:0 0 8px}
 .olrelay{display:grid;gap:8px}.olrelay2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .olrelay .olst{margin-top:0}
+/* relay settings; Direct/Relay tags */
+.olchk{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;min-height:32px;cursor:pointer}
+.olchk input{width:20px;height:20px;margin:0;accent-color:var(--gold,#f4c24f);flex:0 0 auto}
+.olhelp .olst{margin:6px 0 4px;font-size:12.5px}
+.oladv{margin-top:10px}.oladv summary{font-size:12.5px;font-weight:600}
+.oladv > .ollab,.oladv > p{margin:8px 0}.oladv > p{font-size:12.5px}
+.olvia,.side .sh .via{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:1px 8px;border-radius:99px;border:1px solid #ffffff30;color:#d8dce4;vertical-align:1px}
+.side .sh .via{margin:0 8px 0 auto}
 @media(max-width:820px){
   /* phones: while hosting or joining, only the panel in use is shown */
   .olgrid.hosting .olyou,.olgrid.hosting .oljoin,.olgrid.joining .olyou,.olgrid.joining .olhost{display:none}
@@ -799,6 +811,7 @@ select,input[type=text],input[type=search],input[type=password]{background:var(-
 .flip.open .f{transform:rotateY(180deg)}
 .flip .back,.flip .cf{--w:160px;backface-visibility:hidden}
 .flip .cf{position:absolute;inset:0;transform:rotateY(180deg)}
+.flip.shown .f{transform:none;transition:none;transform-style:flat}.flip.shown .cf:not(.lit){transform:none}.flip.shown .back{visibility:hidden}
 .flip .new{position:absolute;top:-8px;left:-6px;z-index:6;background:var(--good);color:#04230f;font-weight:800;font-size:10px;padding:2px 8px;border-radius:99px;opacity:0;transition:opacity .2s .4s}
 .flip.open .new{opacity:1}
 .toast{position:fixed;bottom:22px;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#000e;border:1px solid var(--line2);border-radius:10px;padding:9px 16px;z-index:200;font-weight:600;font-size:13px;animation:tst 2.2s forwards;pointer-events:none}
@@ -830,12 +843,14 @@ select,input[type=text],input[type=search],input[type=password]{background:var(-
 @media (pointer:coarse){.overlay,.overlay.end{backdrop-filter:none;-webkit-backdrop-filter:none;background:#05080df0}}
 /* ---------- performance mode (html.lp, set by ui.js applyPerf; on by default for touch screens) ----------
    Same information, cheaper to draw: no blur, no foil sheen, glare or blend layers on small cards (the enlarged card in
-   #pv or the inspect pop-up keeps them), no 3D tilt, no looping decoration (static glows instead), smaller shadows. */
+   #pv or the inspect pop-up keeps them; collection and pack cards keep their still foil, and the glare while touched),
+   no 3D tilt in the hand, no looping decoration (static glows instead), smaller shadows. */
 html.lp .overlay,html.lp .overlay.end{backdrop-filter:none;-webkit-backdrop-filter:none;background:#05080df0}
 html.lp .cf .glq,html.lp .cf.ub .ucost b,html.lp .cf.ub .uglq,html.lp .cf.altart .txt{backdrop-filter:none;-webkit-backdrop-filter:none}
 html.lp .cf .glq{background:#0a0b0fe6}html.lp .cf.ub .uglq{background:#000b}
 html.lp .cf .fshine,html.lp .cf .glare,html.lp .cf .shine,html.lp .hand .hc::after{display:none}
 html.lp .pv .cf .fshine,html.lp .pv .cf .glare,html.lp .pv .cf .shine,html.lp .insp .cf .fshine,html.lp .insp .cf .glare,html.lp .insp .cf .shine{display:block}
+html.lp :is(.cgrid,.pack) .cf:not(.mini) :is(.fshine,.shine),html.lp :is(.cgrid,.pack,.overlay) .cf:is(.lit,.ease) :is(.fshine,.shine,.glare){display:block}
 html.lp .hand .hc{transform-style:flat}
 @media (hover:hover){html.lp .hand .hc:hover{transform:translateY(calc(var(--uw)*-.7)) scale(1.08)}}
 html.lp .cf.ub.r-m .uedge,html.lp .flyer,html.lp .zoom,html.lp .sigpop img,html.lp .sigcard{filter:none}
@@ -884,7 +899,8 @@ html{-webkit-tap-highlight-color:transparent}
   .olp{min-width:0}
   .olp .rw input,#dc .rw input{width:0}   /* flex:1 fields fill the row instead of their 16px default width */
   #ncode{font-size:20px!important}
-  .olrelay input{width:100%;min-width:0}
+  .olrelay input,.oladv input[type=text]{width:100%;min-width:0}
+  .olchk{min-height:44px}
   .dl > div{min-height:40px}
   .dl > div .btn.sm{min-height:32px;padding:4px 10px}
   /* deck builder: the count badge on a pool card is a remove button (iOS has no right-click) */
@@ -2682,12 +2698,28 @@ function texSoon(){if(texBusy||texI>=TEX_GEN.length)return;texBusy=true;
   else idle(texRun,3000);}
 // a foil, Unbound or alt-art card is being drawn: make the textures right after this frame
 function texWant(){if(texHurry||texI>=TEX_GEN.length)return;texHurry=true;texBusy=false;texSoon();}
-document.addEventListener('pointermove',e=>{if(e.pointerType=='touch')return;const cf=e.target.closest&&e.target.closest('.cgrid .cf,.overlay .cf,.pack .cf,.cf.ub,.cf.altart');if(!cf||cf.classList.contains('mini'))return;
-  const r=cf.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
-  cf.style.setProperty('--mx',(x*100).toFixed(1)+'%');cf.style.setProperty('--my',(y*100).toFixed(1)+'%');
-  cf.style.setProperty('--px',(20+x*60).toFixed(1)+'%');cf.style.setProperty('--py',(20+y*60).toFixed(1)+'%');
-  cf.style.setProperty('--tx',((x-.5)*8).toFixed(2)+'deg');cf.style.setProperty('--ty',((.5-y)*7).toFixed(2)+'deg');cf.classList.add('lit');});
-document.addEventListener('pointerout',e=>{const cf=e.target.closest&&e.target.closest('.cf.lit');if(cf&&!cf.contains(e.relatedTarget))cf.classList.remove('lit');});
+/* large cards tilt toward the pointer and their foil, sheen and glare follow it: under the mouse, or under a finger on
+   touch screens (a mostly upright swipe still scrolls: the browser takes it over with pointercancel and the card eases
+   back). One style write per frame at most, and nothing runs while no pointer is on a card. */
+let tiltEl=null,tiltX=0,tiltY=0,tiltRaf=0;
+function tiltCard(e){const cf=e.target.closest&&e.target.closest('.cgrid .cf,.overlay .cf,.pack .cf,.cf.ub,.cf.altart');
+  return cf&&!cf.classList.contains('mini')&&!(e.pointerType=='touch'&&cf.closest('.hand'))?cf:null;}
+function tiltFrame(){tiltRaf=0;const cf=tiltEl;if(!cf||!cf.isConnected)return;const r=cf.getBoundingClientRect();if(!r.width)return;
+  const x=Math.min(1,Math.max(0,(tiltX-r.left)/r.width)),y=Math.min(1,Math.max(0,(tiltY-r.top)/r.height)),s=cf.style;
+  s.setProperty('--mx',(x*100).toFixed(1)+'%');s.setProperty('--my',(y*100).toFixed(1)+'%');
+  s.setProperty('--px',(20+x*60).toFixed(1)+'%');s.setProperty('--py',(20+y*60).toFixed(1)+'%');
+  s.setProperty('--tx',((x-.5)*8).toFixed(2)+'deg');s.setProperty('--ty',((.5-y)*7).toFixed(2)+'deg');cf.classList.add('lit');}
+function tiltTo(cf,e){if(tiltEl&&tiltEl!=cf)tiltOff(tiltEl);tiltEl=cf;tiltX=e.clientX;tiltY=e.clientY;if(!tiltRaf)tiltRaf=requestAnimationFrame(tiltFrame);}
+// 'ease' keeps the glare drawn while it fades out (performance mode hides it on cards at rest)
+function tiltOff(cf){if(!cf)return;if(cf==tiltEl)tiltEl=null;if(!cf.classList.contains('lit'))return;
+  cf.classList.remove('lit');cf.classList.add('ease');clearTimeout(cf._ease);cf._ease=setTimeout(()=>cf.classList.remove('ease'),600);}
+document.addEventListener('pointermove',e=>{if(!e.isPrimary)return;const cf=tiltCard(e);if(cf)tiltTo(cf,e);});
+document.addEventListener('pointerdown',e=>{if(e.pointerType!='touch'||!e.isPrimary)return;const cf=tiltCard(e);if(!cf)return;
+  if(cf.matches('.foil,.ub,.altart'))texWant();   // the foil textures, if this card's first frame has not made them yet
+  if(cf.closest('.insp'))tiltTo(cf,e);});        // the enlarged card leans in at once; in grids a swipe may be a scroll
+const tiltEnd=e=>{if(e.pointerType=='touch')tiltOff(tiltEl);};
+document.addEventListener('pointerup',tiltEnd);document.addEventListener('pointercancel',tiltEnd);
+document.addEventListener('pointerout',e=>{const cf=e.target.closest&&e.target.closest('.cf');if(cf&&(cf==tiltEl||cf.classList.contains('lit'))&&!cf.contains(e.relatedTarget))tiltOff(cf);});
 // Ley Surge: veins of ley energy flow up through the art. Each card's veins are seeded by its id, so no two are alike.
 function surgeHTML(c,tone){
   let s=0;for(const ch of c.id)s=(s*31+ch.charCodeAt(0))>>>0;
@@ -3010,6 +3042,7 @@ function concede(scope){
 function leaveGuard(dest){
   const G=UI.G,M=curMatch();
   if(UI.screen!='game'||!G||G.winner===-1||M&&M.phase=='stopped'||!(M?M.winner==null:G.online&&G.winner==null))return false;   // -1/stopped: out of sync, nothing to concede
+  if(M&&M.online&&!M.results.length&&G.mid!==M.mid)return false;   // online, no game of this match dealt yet (rematch toss): leaving concedes nothing
   const html=`<div class="dlg mconc"><h2>Leave the ${M?'match':'game'}?</h2><p class="mute">${M?`Best of 3 · Game ${M.g} · ${scoreText(M)}. Leaving concedes the match.`:'Leaving concedes the game.'}</p>
     <div class="rw"><button class="btn" data-act="mleave" data-v="${esc(dest)}">${M?'Concede match and leave':'Concede and leave'}</button><button class="btn pri" ${$('.overlay.end')?'data-act="mstay"':'data-close'}>Stay</button></div></div>`;
   const e=$('.overlay.end');if(e){e.innerHTML=html;e.classList.add('keep');}else overlay(html);
@@ -3201,7 +3234,7 @@ function renderTable(){
     :`${pipsFor(1)}<span>${RIV()} is Ascendant (${heldCount(G,1)}/3 held). Keep a unit on a node to stop them.${colx}</span>`}</div></div>`:'';
   patchApp(`<div id="table" class="${UI.side?'':'noside'} ${UI.side?'showside':''}">
    <aside class="side">
-     <div class="sh"><b>LEYLINE</b><button class="btn sm" data-act="side" title="Hide panel">⟨</button></div>
+     <div class="sh"><b>LEYLINE</b>${G.online&&typeof netVia=='function'&&netVia()?`<small class="via" title="How you are connected to your opponent">${netVia()}</small>`:''}<button class="btn sm" data-act="side" title="Hide panel">⟨</button></div>
      <div class="lab">PLAYERS</div>
      ${[0,1].map(pi=>`<div class="pl ${G.active==pi?'on':''}" style="--c:${pi?'var(--foe)':'var(--me)'}"><i></i>${pi?RIV():'You'} <small>${FL(G.players[pi].legend.card.f)}${ascendant(G,pi)?' ✦':''}</small><b>${G.players[pi].glory} ◆ · ${heldCount(G,pi)}/3</b></div>`).join('')}
      ${MM?`<div class="lab">BEST OF 3 · GAME ${G.gno||MM.g}</div><div class="pl msc" style="--c:var(--gold)"><i></i>Match<b>You ${MM.score[0]} – ${MM.score[1]} ${esc(MM.opp)}</b></div>`:''}
@@ -3905,6 +3938,8 @@ function openPack(){
 }
 function flipCard(t){
   if(t.classList.contains('open'))return;t.classList.add('open');
+  // turned over: from now on a flat card (no 3D flip context, so it stays sharp when it tilts), switched without a transition
+  setTimeout(()=>{const c=t.querySelector('.cf');if(c)c.style.transition='none';t.classList.add('shown');if(c){c.offsetWidth;c.style.transition='';}},REDUCED?0:600);
   const card=t.querySelector('.cf');const r=t.className.match(/r-(\w)/);const rar=r?r[1]:'c';
   if(rar!='c'&&!REDUCED){const[x,y]=centerOf(t);const col=t.classList.contains('alt')?'#ffe7a3':rar=='m'?'#ff6bd6':rar=='L'?'#ffffff':rar=='r'?'#f4c24f':'#6fd3ff';
     setTimeout(()=>{ring(x,y,col,rar=='u'?140:240);burst(x,y,col,rar=='u'?10:30,rar=='u'?70:150);},280);}
@@ -4078,15 +4113,297 @@ go('menu');
 texSoon();
 
 ;
+/* ===================== Relay: when two devices cannot reach each other directly =====================
+   The moves then travel through free public MQTT servers over secure WebSockets (port 443 first). Both players
+   listen on every server they reach and send on up to three (those the other is heard on first), so one server
+   going down does not stop the game. End-to-end encrypted (AES-GCM): PBKDF2 of the game code (slow on purpose)
+   gives the topic and a handshake key, then each connection agrees a fresh key with ECDH P-256 (recorded traffic
+   stays unreadable to someone who learns the code later; replays are refused).
+   A connection behaves like a PeerJS DataConnection for net.js (open, send, close, on open/data/close) and adds
+   sequence numbers, acks, resending, de-duplication, in-order delivery, a heartbeat every 4 s when idle and a
+   dead-line check (15 s of silence closes it; net.js then reconnects). Every frame carries a counter: only a newer
+   frame shows that the other side is still there (a recorded frame sent again does not keep a dead line alive). */
+const RLY_PUBLIC=[   // in order of preference; NET_CONFIG.relays replaces it
+  {url:'wss://public.cloud.shiftr.io',user:'public',pass:'public'},
+  {url:'wss://iot.coreflux.cloud/mqtt',user:'public',pass:'public'},
+  {url:'wss://broker.emqx.io:8084/mqtt'},
+  {url:'wss://broker.hivemq.com:8884/mqtt'}];
+const RLY_PING=4000,RLY_DEAD=15000,RLY_HELLO_MS=130000;   // a guest that gets no answer stops asking after RLY_HELLO_MS
+const RLY={on:false,brk:[],subs:{},offT:0,onchange:null,keys:{},g:{},gone:{}};
+const RTE=new TextEncoder(),RTD=new TextDecoder();
+const rcat=(...a)=>{let n=0;a.forEach(x=>n+=x.length);const o=new Uint8Array(n);let i=0;a.forEach(x=>{o.set(x,i);i+=x.length;});return o;};
+const rrand=n=>crypto.getRandomValues(new Uint8Array(n));
+const rhex=a=>Array.from(a,x=>(x<16?'0':'')+x.toString(16)).join('');
+const rb64=a=>btoa(String.fromCharCode.apply(null,a)),rb64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+// needs WebCrypto: an https:// page (or localhost)
+const rlyOK=()=>{try{return !!(window.WebSocket&&window.crypto&&crypto.subtle&&window.isSecureContext!==false);}catch(e){return false;}};
+const rlyOff=()=>{try{return localStorage.getItem('ll_norelay')==='1';}catch(e){return false;}};
+const rlyMine=()=>{try{return localStorage.getItem('ll_broker')||'';}catch(e){return '';}};
+// addresses typed by the player: wss://[user:pass@]host[:port][/path]
+function rlyParse(v){
+  return String(v||'').split(/[\s,;]+/).map(s=>s.trim()).filter(Boolean).map(s=>{
+    const m=s.match(/^(wss?):\/\/(?:([^:@\/\s]*):([^@\/\s]*)@)?([A-Za-z0-9.\-]+|\[[0-9a-fA-F:]+\])(:\d{1,5})?(\/[\w.\-\/~%]*)?$/);
+    if(!m)return null;const e={url:m[1]+'://'+m[4]+(m[5]||'')+(m[6]||'')};
+    if(m[2]!=null){try{e.user=decodeURIComponent(m[2]);e.pass=decodeURIComponent(m[3]);}catch(x){return null;}}return e;}).filter(Boolean).slice(0,4);
+}
+// the servers in use: the player's own, then the built-in ones (unless switched off)
+function rlyEndpoints(){
+  const cfg=typeof NETCFG=='object'&&NETCFG?NETCFG.relays:undefined,out=[],seen={};
+  const add=(e,src)=>{if(e&&typeof e.url=='string'&&!seen[e.url]){seen[e.url]=1;out.push({url:e.url,user:e.user,pass:e.pass,src});}};
+  rlyParse(rlyMine()).forEach(e=>add(e,'this device'));
+  if(!rlyOff())(Array.isArray(cfg)?cfg:cfg===false?[]:RLY_PUBLIC).forEach(e=>add(e,Array.isArray(cfg)?'built in':'public'));
+  return out.slice(0,8);
+}
+const rlyCan=()=>rlyOK()&&rlyEndpoints().length>0;
+const rlyUp=()=>RLY.brk.filter(b=>b.st=='up').length;
+
+/* ---------- MQTT 3.1.1 over WebSocket (QoS 0, never retained) ---------- */
+const rstr=s=>{const e=typeof s=='string'?RTE.encode(s):s;return rcat([e.length>>8,e.length&255],e);};
+function rpkt(type,flags,body){const v=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n)d|=128;v.push(d);}while(n);return rcat([type<<4|flags],v,body);}
+function rlyHub(){
+  clearTimeout(RLY.offT);RLY.offT=0;if(RLY.on)return;RLY.on=true;
+  RLY.brk=rlyEndpoints().map((ep,i)=>({ep,i,ws:null,st:'idle',buf:new Uint8Array(0),n:0,t:0,pT:0,last:0,pid:1}));
+  RLY.brk.forEach(rlyConnect);
+}
+function rlyConnect(b){
+  if(!RLY.on||b.ws||RLY.brk[b.i]!==b)return;clearTimeout(b.t);
+  let ws;try{ws=new WebSocket(b.ep.url,['mqtt']);}catch(e){return rlyRetry(b);}
+  b.ws=ws;b.st='connecting';b.buf=new Uint8Array(0);ws.binaryType='arraybuffer';
+  const to=setTimeout(()=>{if(b.ws===ws&&b.st!='up')rlyDrop(b);},9000);
+  ws.onopen=()=>{const u=b.ep.user!=null,p=u&&b.ep.pass!=null;
+    try{ws.send(rpkt(1,0,rcat(rstr('MQTT'),[4,2|(u?128:0)|(p?64:0),0,30],rstr('ll'+rhex(rrand(7))),u?rstr(b.ep.user):[],p?rstr(b.ep.pass):[])));}catch(e){}};
+  ws.onmessage=e=>{if(b.ws===ws&&e.data instanceof ArrayBuffer)rlyFeed(b,new Uint8Array(e.data));};
+  ws.onclose=ws.onerror=()=>{clearTimeout(to);if(b.ws===ws)rlyDrop(b);};
+}
+function rlyDrop(b,stop){   // the socket is gone: try again later (quickly again only after a connection that lasted 30 s)
+  const ws=b.ws,was=b.st;b.ws=null;b.st='down';clearInterval(b.pT);b.downAt=Date.now();if(was=='up'&&b.downAt-b.upAt>30000)b.n=0;
+  if(ws){ws.onclose=ws.onerror=ws.onmessage=ws.onopen=null;try{if(ws.readyState==1)ws.send(new Uint8Array([0xE0,0]));ws.close();}catch(e){}}
+  if(!stop)rlyRetry(b);if(was=='up')rlyChanged();
+}
+function rlyRetry(b){clearTimeout(b.t);if(!RLY.on)return;b.t=setTimeout(()=>rlyConnect(b),Math.min(60000,2000*2**Math.min(b.n++,5)));}
+function rlySend(b,bytes){if(b.ws&&b.ws.readyState==1){try{b.ws.send(bytes);return true;}catch(e){}}return false;}
+function rlyFeed(b,chunk){
+  let x=b.buf.length?rcat(b.buf,chunk):chunk;
+  for(;;){if(x.length<2)break;let m=1,len=0,i=1,d;
+    do{d=x[i++];len+=(d&127)*m;m*=128;}while((d&128)&&i<x.length&&i<5);
+    if(d&128){if(i>=5)return rlyDrop(b);break;}
+    if(x.length<i+len)break;
+    const h=x[0],p=x.subarray(i,i+len);x=x.subarray(i+len);b.last=Date.now();rlyPacket(b,h>>4,h&15,p);if(!b.ws)return;}
+  b.buf=x.length?x.slice():new Uint8Array(0);
+}
+function rlyPacket(b,type,flags,p){
+  if(type==2){                                          // CONNACK
+    if(p[1]!==0)return rlyDrop(b);
+    b.st='up';b.upAt=Date.now();Object.keys(RLY.subs).forEach(t=>rlySubOn(b,t));
+    clearInterval(b.pT);b.pT=setInterval(()=>{if(Date.now()-b.last>25000)return rlyDrop(b);rlySend(b,new Uint8Array([0xC0,0]));},12000);
+    setTimeout(()=>rlyAll().forEach(c=>{if(c.tick)c._flush(true);}),300);
+    rlyChanged();}
+  else if(type==3){                                     // PUBLISH
+    const tl=p[0]<<8|p[1],topic=RTD.decode(p.subarray(2,2+tl)),qos=flags>>1&3;let i=2+tl;
+    if(qos){rlySend(b,rpkt(4,0,p.slice(i,i+2)));i+=2;}
+    const f=RLY.subs[topic];if(f)f(p.slice(i),b.i);}
+}
+function rlySubOn(b,t){const id=b.pid=b.pid%65000+1;rlySend(b,rpkt(8,2,rcat([id>>8,id&255],rstr(t),[0])));}
+function rlySub(t,fn){rlyHub();RLY.subs[t]=fn;RLY.brk.forEach(b=>{if(b.st=='up')rlySubOn(b,t);});}
+function rlyUnsub(t){
+  if(RLY.subs[t]){delete RLY.subs[t];
+    RLY.brk.forEach(b=>{if(b.st=='up'){const id=b.pid=b.pid%65000+1;rlySend(b,rpkt(10,2,rcat([id>>8,id&255],rstr(t))));}});}
+  rlyIdle();
+}
+// nothing left to listen to (also when a listener or dial ended before it subscribed): close the sockets soon,
+// unless something subscribes again (rlyHub cancels this)
+function rlyIdle(){if(RLY.on&&!Object.keys(RLY.subs).length){clearTimeout(RLY.offT);RLY.offT=setTimeout(()=>{if(!Object.keys(RLY.subs).length)rlyStop();},3000);}}
+function rlyStop(){RLY.on=false;clearTimeout(RLY.offT);RLY.brk.forEach(b=>{clearTimeout(b.t);rlyDrop(b,true);});RLY.brk=[];rlyChanged();}
+// the list of servers changed (Connection help): reconnect with the new list, keeping what we listen to
+function rlyRestart(){if(!RLY.on)return;rlyStop();if(Object.keys(RLY.subs).length&&rlyEndpoints().length)rlyHub();}
+function rlyPub(t,bytes,which){
+  const pk=rpkt(3,0,rcat(rstr(t),bytes));let n=0;
+  (which||RLY.brk.filter(b=>b.st=='up').map(b=>b.i)).forEach(i=>{const b=RLY.brk[i];if(b&&b.st=='up'&&rlySend(b,pk))n++;});return n;
+}
+function rlyChanged(){if(RLY.onchange)try{RLY.onchange();}catch(e){console.warn('Leyline relay:',e);}}
+// back from the background or a network change: check every socket now
+function rlyWake(){
+  if(!RLY.on)return;const now=Date.now();
+  RLY.brk.forEach(b=>{
+    if(!b.ws||b.ws.readyState>1){if(b.n>2&&now-(b.downAt||0)<60000)return;   // a server that keeps dropping us waits for its backoff
+      clearTimeout(b.t);if(b.ws)rlyDrop(b,true);rlyConnect(b);return;}
+    if(b.st=='up'&&rlySend(b,new Uint8Array([0xC0,0])))setTimeout(()=>{if(b.st=='up'&&b.last<now)rlyDrop(b);},5000);});
+  rlyAll().forEach(c=>{if(c.tick)c._flush(true);});
+}
+function rlyAll(){let a=Object.values(RLY.g);Object.values(RLY.lst||{}).forEach(L=>{a=a.concat(Object.values(L.ss));});return a;}
+
+/* ---------- keys and frames ---------- */
+const rsha=async(...a)=>new Uint8Array(await crypto.subtle.digest('SHA-256',rcat(...a.map(x=>typeof x=='string'?RTE.encode(x):x))));
+const raes=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+function rlyKeys(code){
+  return RLY.keys[code]||(RLY.keys[code]=(async()=>{
+    const base=await crypto.subtle.importKey('raw',RTE.encode('leyline|'+code),'PBKDF2',false,['deriveBits']);
+    const m=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:RTE.encode('leyline relay v1'),iterations:150000},base,256));
+    const tid=rhex((await rsha(m,'topic')).subarray(0,16));
+    return {m,kc:await raes(await rsha(m,'key')),h:'ll1/'+tid+'/h',g:'ll1/'+tid+'/g'};})().catch(e=>{delete RLY.keys[code];throw e;}));
+}
+// frame: [1,type,from(8),to(8),iv(12),AES-GCM(JSON)], header and direction authenticated.
+// types: 1 hello, 2 accept, 4 reset (code key); 3 data (session key)
+async function rlySeal(key,type,from,to,dir,o){
+  const h=rcat([1,type],from,to),iv=rrand(12);
+  return rcat(h,iv,new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:rcat(h,RTE.encode(dir))},key,RTE.encode(JSON.stringify(o)))));
+}
+async function rlyUnseal(key,f,dir){
+  try{return JSON.parse(RTD.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:f.subarray(18,30),additionalData:rcat(f.subarray(0,18),RTE.encode(dir))},key,f.subarray(30))));}catch(e){return null;}
+}
+async function rlyEph(){const k=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);return {k,pub:new Uint8Array(await crypto.subtle.exportKey('raw',k.publicKey))};}
+async function rlySessKey(eph,pub,m,gs,hs){
+  const pk=await crypto.subtle.importKey('raw',rb64d(pub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+  return raes(await rsha(new Uint8Array(await crypto.subtle.deriveBits({name:'ECDH',public:pk},eph.k.privateKey,256)),m,gs,hs));
+}
+const rlyFrame=f=>f.length>=46&&f[0]===1?{type:f[1],from:rhex(f.subarray(2,10)),to:rhex(f.subarray(10,18))}:null;
+
+/* ---------- one connection ---------- */
+class RlyConn{
+  constructor(side){this._h={};this.side=side;this.open=false;this.relay=true;this.ready=false;this.closed=false;
+    this.sid=rrand(8);this.sidx=rhex(this.sid);this.peer='';this.metadata=null;
+    this.ks=null;this.out=[];this.q=0;this.got=0;this.hold={};this.heard={};this.lastRx=Date.now();this.lastTx=0;this.ackT=0;this.fT=0;this.tick=0;
+    this.fs=0;this.fr=0;}   // frame counters: sent, highest received
+  on(e,f){(this._h[e]=this._h[e]||[]).push(f);return this;}
+  emit(e,...a){(this._h[e]||[]).slice().forEach(f=>{try{f(...a);}catch(x){console.error('Leyline relay:',x);}});}
+  send(m){if(!this.open||this.closed)return;this.out.push({q:++this.q,m,t:0,n:0});if(!this.fT)this.fT=setTimeout(()=>{this.fT=0;this._flush();},0);}
+  // guest: use this line (the host's side opens when this first message arrives)
+  activate(){if(this.open||this.closed||!this.ready)return;this.open=true;this.out.push({q:++this.q,m:{$:1},t:0,n:0});this._flush();this.emit('open');}
+  close(){
+    if(this.closed||this.closing)return;const was=this.open;this.open=false;this.closing=true;
+    if(was||this.side=='g')setTimeout(()=>this.emit('close'),0);
+    // the unacknowledged are resent for up to 2 s, then the other side is told
+    let k=0;const fin=()=>{if(this.closed)return;if(this.ks&&this.out.length&&k++<5){this.out.forEach(x=>x.t=0);this._flush();return setTimeout(fin,400);}
+      if(this.ks){this._frame({x:1});setTimeout(()=>this._frame({x:1}),400);}this.closed=true;this._stop();};fin();
+  }
+  _stop(){clearInterval(this.tick);this.tick=0;clearTimeout(this.ackT);clearTimeout(this.fT);clearTimeout(this.exp);clearTimeout(this.hT);
+    if(this.side=='g'){if(RLY.g[this.sidx]===this){delete RLY.g[this.sidx];rlyGone(RLY.gone,this.sidx,{K:this.K,p:this.psx});}
+      if(!Object.keys(RLY.g).length)this.K?rlyUnsub(this.K.g):rlyIdle();}
+    else if(this.L&&this.L.ss[this.gsx]===this){delete this.L.ss[this.gsx];if(this.ks)rlyGone(this.L.gone,this.sidx,{p:this.psx});}}
+  _end(){if(this.closed)return;const was=(this.open||this.side=='g')&&!this.closing;this.open=false;this.closed=true;this._stop();if(was)this.emit('close');}
+  _start(){this.lastRx=Date.now();clearInterval(this.tick);this.tick=setInterval(()=>this._tick(),500);}
+  _tick(){const now=Date.now();
+    if(now-this.lastRx>RLY_DEAD)return this._end();
+    if(this.out.some(x=>now>=x.t))this._flush();else if(now-this.lastTx>RLY_PING)this._frame({a:this.got});}
+  // new and overdue messages go out in one frame (up to ~12 KB) with our ack
+  _flush(force){
+    if(!this.ks)return;const now=Date.now(),b=[];let size=0;
+    for(const x of this.out){if(now<x.t)continue;const s=JSON.stringify(x.m).length;if(b.length&&size+s>12000)break;
+      b.push([x.q,x.m]);size+=s;x.n++;x.t=now+Math.min(8000,1500*2**Math.min(x.n-1,3));}
+    if(b.length||force)this._frame(b.length?{a:this.got,b}:{a:this.got});
+  }
+  _frame(o){if(!this.ks)return;this.lastTx=Date.now();clearTimeout(this.ackT);this.ackT=0;o.f=++this.fs;
+    const g=this.side=='g';rlySeal(this.ks,3,this.sid,this.psid,g?'h':'g',o).then(f=>rlyPub(g?this.K.h:this.K.g,f,this._via())).catch(()=>{});}
+  // send on servers the other side was heard on lately, then the preferred ones; three at most
+  _via(){const now=Date.now(),up=RLY.brk.filter(b=>b.st=='up'),h=up.filter(b=>now-(this.heard[b.i]||0)<30000);
+    return h.concat(up.filter(b=>h.indexOf(b)<0)).slice(0,3).map(b=>b.i);}
+  async _rx(f,bi){
+    const o=await rlyUnseal(this.ks,f,this.side=='g'?'g':'h');if(!o||this.closed)return;
+    // only a newer frame shows the other side is there: an old one may be a recording sent again (the same frame also
+    // comes once per server). Frames from builds before the counter have none.
+    const now=Date.now();let fresh=true;
+    if(typeof o.f=='number'){if(o.f>this.fr)this.fr=o.f;else{fresh=false;if(o.f===this.fr)this.heard[bi]=now;}}
+    if(fresh){this.lastRx=now;this.heard[bi]=now;if(o.x)return this._end();}
+    if(typeof o.a=='number')this.out=this.out.filter(x=>x.q>o.a);
+    if(Array.isArray(o.b)){let nw=false;
+      o.b.forEach(e=>{if(Array.isArray(e)&&Number.isInteger(e[0])&&e[0]>this.got&&e[0]<=this.got+5000&&!(e[0] in this.hold)){this.hold[e[0]]=e[1];nw=true;}});
+      while((this.got+1) in this.hold){const m=this.hold[++this.got];delete this.hold[this.got];this._deliver(m);if(this.closed)return;}
+      if((fresh||nw)&&!this.ackT)this.ackT=setTimeout(()=>{this.ackT=0;this._flush(true);},120);}
+  }
+  _deliver(m){
+    if(m&&m.$===1){if(this.side=='h'&&!this.open){this.open=true;clearTimeout(this.exp);if(this.L&&this.L.onConn)this.L.onConn(this);this.emit('open');}return;}
+    if(this.open)this.emit('data',m);
+  }
+}
+
+/* ---------- guest: ask the host for a line. 'ready' when keys are agreed; opens on activate(). ---------- */
+function rlyDial(code,me){
+  const c=new RlyConn('g');c.metadata={me};c.peer='relay-host';
+  rlyHub();
+  (async()=>{const K=c.K=await rlyKeys(code);c.eph=await rlyEph();if(c.closed)return rlyIdle();
+    RLY.g[c.sidx]=c;rlySub(K.g,rlyOnGuest);
+    const zero=new Uint8Array(8),body={pub:rb64(c.eph.pub),me},t0=Date.now();let k=0;
+    // asked again at 1.5, 3, then 5 s; nobody answered within RLY_HELLO_MS: the line ends (net.js may dial again)
+    const hello=()=>{if(c.closed||c.ks)return;if(Date.now()-t0>RLY_HELLO_MS)return c._end();if(!c.helloAt)c.helloAt=Date.now();
+      rlySeal(K.kc,1,c.sid,zero,'h',body).then(f=>rlyPub(K.h,f)).catch(()=>{});
+      c.hT=setTimeout(hello,k++<3?1500:k<8?3000:5000);};
+    let w=0;const first=()=>{if(c.closed)return;if(rlyUp()||w++>12)hello();else c.hT=setTimeout(first,250);};first();
+  })().catch(e=>{console.warn('Leyline relay:',e&&e.message||e);c._end();rlyIdle();});
+  return c;
+}
+async function rlyOnGuest(f,bi){
+  const h=rlyFrame(f);if(!h)return;const c=RLY.g[h.to];
+  if(!c){const g=RLY.gone[h.to];if(g&&h.type==3&&(!g.p||h.from===g.p))rlyReset(g.K,f,g.K.h,'h',bi);return;}   // a line we closed
+  if(c.closed)return;
+  if(h.type==3){if(c.ks&&h.from===c.psx)c._rx(f,bi);return;}
+  const o=await rlyUnseal(c.K.kc,f,'g');if(!o||c.closed)return;
+  if(h.type==2&&!c.psid&&typeof o.pub=='string'){
+    c.psid=f.slice(2,10);c.psx=h.from;
+    try{c.ks=await rlySessKey(c.eph,o.pub,c.K.m,c.sid,c.psid);}catch(e){c.psid=null;return;}
+    if(c.closed)return;clearTimeout(c.hT);c.heard[bi]=Date.now();c._start();c.ready=true;c.emit('ready');}
+  else if(h.type==4&&h.from===c.psx)c._end();
+}
+// "no such line" to the other end of a line we closed: once per line every 3 s, at most one a second and 20 a minute
+// in all, and only on the server the frame came on (anyone watching a public server can send us frames)
+function rlyReset(K,f,topic,dir,bi){
+  const now=Date.now(),k=rhex(f.subarray(2,18)),R=RLY.rst=RLY.rst||{},B=RLY.rb=RLY.rb||{t:0,n:0,m:now};
+  for(const x in R)if(now-R[x]>10000)delete R[x];
+  if(now-(R[k]||0)<3000)return;
+  if(now-B.m>60000){B.m=now;B.n=0;}if(now-B.t<1000||B.n>=20)return;
+  R[k]=B.t=now;B.n++;
+  rlySeal(K.kc,4,f.slice(10,18),f.slice(2,10),dir,{}).then(x=>rlyPub(topic,x,bi==null?null:[bi])).catch(()=>{});
+}
+// lines we closed, so a late frame on one gets a reset (the last 16)
+function rlyGone(m,k,v){v.t=Date.now();m[k]=v;const ks=Object.keys(m);if(ks.length>16)ks.sort((a,b)=>m[a].t-m[b].t).slice(0,ks.length-16).forEach(x=>delete m[x]);}
+
+/* ---------- host: onConn(c) when a guest opens a line (like PeerJS 'connection') ---------- */
+// gone: lines of this game a reloaded page had open ([{s,p}] from rlySids), so the guest learns at once that they ended
+function rlyListen(code,onConn,gone){
+  const L={code,onConn,ss:{},gone:{},closed:false,ready:false};RLY.lst=RLY.lst||{};
+  (Array.isArray(gone)?gone:[]).forEach(x=>{if(x&&/^[0-9a-f]{16}$/.test(x.s)&&/^[0-9a-f]{16}$/.test(x.p))rlyGone(L.gone,x.s,{p:x.p});});
+  rlyHub();
+  rlyKeys(code).then(K=>{if(L.closed)return rlyIdle();L.K=K;RLY.lst[K.h]=L;rlySub(K.h,(f,bi)=>{const x=RLY.lst[K.h];if(x)rlyOnHost(x,f,bi);});L.ready=true;rlyChanged();})
+    .catch(e=>{console.warn('Leyline relay:',e&&e.message||e);rlyIdle();});
+  return L;
+}
+// this host's lines (open and recently closed), to save with the game
+function rlySids(L){const a=Object.values(L&&L.ss||{}).filter(c=>c.ks&&c.psx).map(c=>({s:c.sidx,p:c.psx}));
+  Object.keys(L&&L.gone||{}).forEach(s=>{if(a.length<8&&L.gone[s].p)a.push({s,p:L.gone[s].p});});return a;}
+function rlyUnlisten(L){if(!L||L.closed)return;L.closed=true;Object.values(L.ss).forEach(c=>c.open?c.close():c._end());
+  if(L.K)setTimeout(()=>{if(RLY.lst[L.K.h]===L){delete RLY.lst[L.K.h];rlyUnsub(L.K.h);}},2500);else rlyIdle();}
+async function rlyOnHost(L,f,bi){
+  const h=rlyFrame(f);if(!h)return;let c=L.ss[h.from];
+  if(h.type==3){if(c){if(c.ks&&h.to===c.sidx)c._rx(f,bi);}
+    else{const g=L.gone[h.to];if(g&&h.from===g.p&&!L.closed)rlyReset(L.K,f,L.K.g,'g',bi);}   // only for a line we had
+    return;}
+  if(L.closed)return;const o=await rlyUnseal(L.K.kc,f,'h');if(!o||L.closed)return;
+  if(h.type==1&&typeof o.pub=='string'&&typeof o.me=='string'){
+    c=L.ss[h.from];
+    if(!c){
+      if(Object.keys(L.ss).length>=6){const old=Object.values(L.ss).find(x=>!x.open);if(!old)return;old._end();}
+      c=L.ss[h.from]=new RlyConn('h');c.L=L;c.K=L.K;c.gsx=h.from;c.psid=f.slice(2,10);c.psx=h.from;c.metadata={me:o.me.slice(0,40)};c.peer='relay-'+h.from;
+      c.prep=(async()=>{c.eph=await rlyEph();c.ks=await rlySessKey(c.eph,o.pub,L.K.m,c.psid,c.sid);
+        c.acc=await rlySeal(L.K.kc,2,c.sid,c.psid,'g',{pub:rb64(c.eph.pub)});if(!c.closed)c._start();})().catch(()=>c._end());
+      c.exp=setTimeout(()=>{if(!c.open)c._end();},60000);
+    }
+    await c.prep;if(c.acc&&!c.closed)rlyPub(L.K.g,c.acc);   // also for a repeated hello
+  }
+  else if(h.type==4&&c&&h.to===c.sidx)c._end();
+}
+
+;
 /* ===================== Online play (peer-to-peer, lockstep) =====================
    Two browsers connect directly (WebRTC through PeerJS; the free PeerJS service only
-   introduces them). Both run the same engine: the host picks the random seeds, both
+   introduces them) or, when a direct connection does not open in a few seconds, through the
+   built-in encrypted relay (relay.js). Both run the same engine: the host picks the random seeds, both
    build the identical game, and every move is sent as a small record and replayed on
    the other side. Each player always sits in seat 0 ("You") on their own screen; the
    engine is symmetric, so the two copies stay identical. A hash of the game after
    every move catches any drift. Moves are validated by the engine on arrival, so a
    peer can only make moves the rules allow for their own seat. */
-const NET_PROTO=3;   // 2: best of 3 (toss, pick, gend; gid on mull/act; concede scope). 3: hello is repeated until answered (got)
+const NET_PROTO=5;   // 2: best of 3 (toss, pick, gend; gid on mull/act; concede scope). 3: hello is repeated until answered (got)
+                     // 4: relay; the guest names itself (metadata.me) to get its seat back on another line or after a reload
+                     // 5: 'clock' (choice time left, after a reconnect); the guest's version in metadata.v; relay frame counter
 const NET_FNS=['playCard','move','challenge','quest','bind','burn','channel','legendPower','endTurn'];
 const NET_PEERJS=['https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
 // The matchmaking id prefix. It must NOT follow NET_PROTO: players on different versions still find each
@@ -4098,10 +4415,13 @@ const NET_STUN={urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3
 const NET_DEAD=/openrelay\.metered\.ca|peerjs\.com/i;     // relay hosts that no longer work: never used
 const NETCFG=(typeof NET_CONFIG=='object'&&NET_CONFIG)||{};
 const NET_DIAL_MS=15000,NET_JOIN_MS=120000,NET_HOST_KEEP=600000,NET_PICK_MS=20000;
+// time for a direct connection before the relay is used (joining; reconnecting a direct game)
+const NET_GRACE=5000,NET_GRACE_RC=3000;
 const NET={peer:null,conn:null,role:null,code:null,status:'idle',msg:'',sent:0,recv:0,outbox:[],applying:false,depth:0,
   game:null,mull:[false,false],oppName:'',oppDeck:null,rematch:[false,false],lostAt:0,retry:null,ver:null,
   linked:false,pending:null,pendingAt:0,dialT:0,joinUntil:0,lastFail:'',rcT:0,rcN:0,token:null,oppPeer:null,reopened:false,hiddenAt:0,
-  fmt:'bo1',match:null,myDeck:null,tickT:null};
+  fmt:'bo1',match:null,myDeck:null,tickT:null,
+  rl:null,rpend:null,rlyT:0,me:null,via:'',noDirect:false,joinT:0,stopDial:false,refused:false,inFail:{},hintWho:'',rlyOnlyErr:false,dirAns:false,rlySeen:false,rlyT0:0};
 try{if(localStorage.getItem('ll_netfmt')==='bo3')NET.fmt='bo3';}catch(e){}
 // a match (single game or best of 3) is set up or running: the opponent's seat is taken
 const netInMatch=()=>!!(NET.game||NET.match);
@@ -4146,6 +4466,8 @@ function netHash(G){
 /* ---------- moves: send ours, replay theirs ---------- */
 // the data connection is open and both sides have said hello on it (so missed moves were already resent)
 const netLive=()=>!!(NET.conn&&NET.conn.open&&NET.linked);
+// for the choice clock: a relay line that has been silent for 6 s (the heartbeat is every 4 s) does not count as live
+const netClockLive=()=>netLive()&&!(NET.conn.relay&&Date.now()-NET.conn.lastRx>6000);
 NET_FNS.forEach(name=>{
   const orig=window[name];
   window[name]=function(G){
@@ -4166,7 +4488,7 @@ afterAction=function(){const G=UI.G;if(G&&G.online){if(G.winner!=null)setTimeout
 const _netRunAI=runAI;
 runAI=function(){if(UI.G&&UI.G.online)return;return _netRunAI();};
 
-function netSend(m,keep){if(keep)NET.outbox.push(m);if(NET.conn&&NET.conn.open){try{NET.conn.send(m);}catch(e){console.warn('send failed',e);}}}
+function netSend(m,keep){if(keep){NET.outbox.push(m);netSave();}if(NET.conn&&NET.conn.open){try{NET.conn.send(m);}catch(e){console.warn('send failed',e);}}}
 const okArg=v=>v==null||(typeof v=='number'&&isFinite(v))||(Array.isArray(v)&&v.length<=10&&v.every(x=>typeof x=='number'));
 function netOnAct(m){
   const G=UI.G;if(!G||!G.online||!NET.game||G.gid!==NET.game.gid||m.gid!==G.gid)return;   // a move from another game: stale
@@ -4180,12 +4502,12 @@ function netOnAct(m){
   finally{NET.applying=false;}
   if(e)return netDesync('Your opponent’s move was refused here: '+e);
   if(netHash(G)!==m.h)return netDesync('The two copies of the game no longer match.');
-  renderTable();afterAction();
+  renderTable();afterAction();netSave();
 }
 function netDesync(why){
   console.error('Leyline online: '+why);const G=UI.G;
   if(G&&G.online&&G.winner==null){G.winner=-1;G.reason=why;}
-  if(NET.match&&NET.match.winner==null)NET.match.phase='stopped';netPickStop();   // the match cannot go on
+  if(NET.match&&NET.match.winner==null)NET.match.phase='stopped';netPickStop();netForgetGuest();   // the match cannot go on
   netSend({t:'desync',why:String(why).slice(0,200)});
   document.querySelectorAll('.overlay').forEach(o=>o.remove());
   overlay(`<div class="dlg" style="text-align:center;display:grid;gap:12px"><h2>Game stopped</h2><p class="mute" style="margin:0">${esc(why)}</p><p class="mute" style="margin:0;font-size:12px">No result is recorded. Make sure you both have the same version of Leyline, then start a new game.</p>
@@ -4217,7 +4539,7 @@ function netBegin(setup){
   NET.game=setup;NET.sent=0;NET.recv=0;NET.outbox=[];NET.mull=[false,false];netForgetHost();netPickStop();
   UI.metaRun=false;UI.G=G;app.innerHTML='';UI.focus=null;UI.target=null;UI.busy=false;UI.lastActive=null;UI.hover=null;UI.undo=[];UI.prevHand=null;UI.asc=[false,false];
   if(SIDE_MQ.matches)UI.side=false;   // a new game starts with the phone's log drawer closed
-  UI.screen='game';hideZoom();document.querySelectorAll('.overlay').forEach(o=>o.remove());renderTable();mulliganOverlay();netBar();
+  UI.screen='game';hideZoom();document.querySelectorAll('.overlay').forEach(o=>o.remove());renderTable();mulliganOverlay();netBar();netSave();
 }
 
 /* ---------- matches: a single game or best of 3 ----------
@@ -4247,7 +4569,7 @@ function netNewMatch(re){
   if(M.need<2){M.how='random';return netDeal(Math.random()<0.5);}
   M.toss=M.chooser=Math.random()<.5?0:1;netPickStart();
   netSend({t:'toss',mid:M.mid,fmt:M.fmt,need:M.need,w:M.toss,left:NET_PICK_MS},true);
-  matchChoice(M);
+  matchChoice(M);netKeepHost();
 }
 // host: deal the next game. Fresh seeds every game (reused seeds would repeat every shuffle); decks from the match.
 function netDeal(hostFirst){
@@ -4259,6 +4581,7 @@ function netDeal(hostFirst){
 }
 // the choice: who goes first. v is the seat that goes first (0 = me).
 function netPick(v){
+  if(NET.status=='gone')return toast(esc(nOpp())+' left the game.');
   const M=NET.match;if(!M||M.winner!=null||M.chooser!==0||M.picked||M.dealt===M.g||!(M.phase=='toss'||M.phase=='between'))return;
   if(NET.role=='host'){M.how='pick';return netDeal(v===0);}
   M.picked=true;M.myPick={g:M.g,first:v===0};netSend({t:'pick',mid:M.mid,g:M.g,first:v===0},true);matchChoice(M);
@@ -4274,8 +4597,9 @@ function netTick(){
   const M=NET.match;
   if(!M||M.winner!=null||!(M.phase=='toss'||M.phase=='between')||M.dealt===M.g){netPickStop();return;}
   if(!NET.tickT)NET.tickT=setInterval(netTick,250);
-  const live=netLive(),now=Date.now();
-  if(live&&M.pickRun)M.pickLeft-=now-M.pickRun;M.pickRun=live?now:0;
+  // only time while the line is live counts, and not a long gap: the page was frozen (another app, the lock screen)
+  const live=netClockLive(),now=Date.now(),dt=now-M.pickRun;
+  if(live&&M.pickRun&&dt<1500)M.pickLeft-=dt;M.pickRun=live?now:0;
   const sec=Math.max(0,Math.ceil(M.pickLeft/1000)),txt=live?(M.chooser===0?sec+'s left':sec+'s'):'paused';
   document.querySelectorAll('.mtimer').forEach(e=>{if(e.textContent!==txt)e.textContent=txt;});
   if(NET.role=='host'&&M.pickLeft<=0){M.how='timeout';netDeal(M.chooser===0);}
@@ -4314,7 +4638,7 @@ function netOnGend(m){
   M.k=m.k;netAdopt(m.m);
   if(M.winner==null&&(M.phase=='between'||M.phase=='toss')&&M.dealt!==M.g){M.picked=false;M.myPick=null;M.pickLeft=+m.left||NET_PICK_MS;M.pickRun=0;netTick();}
   if(M.winner!=null){M.phase='over';netPickStop();matchFinish(M);}
-  netShowEnd();
+  netShowEnd();netSave();
 }
 // guest: the coin toss of a new best of 3
 function netOnToss(m){
@@ -4323,13 +4647,13 @@ function netOnToss(m){
   if(old&&old.winner==null&&old.results.length)return netDesync('Match setup mismatch: a new match started before this one ended.');
   NET.match=netNewMatchState({mid:m.mid,fmt:'bo3',need:2,toss:hp(m.w),chooser:hp(m.w),decks:old&&old.winner!=null?old.decks:null,pickLeft:+m.left||NET_PICK_MS});
   NET.rematch=[false,false];NET.outbox=[];
-  matchChoice(NET.match);netTick();netBar();
+  matchChoice(NET.match);netTick();netBar();netSave();
 }
 // guest: check a game the host dealt against the match we know. Returns '' or what is wrong.
 function netCheckStart(s,w){
   const M=NET.match,same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),myFirst=!s.hostFirst;
   if(!M||M.mid!==w.mid){
-    if(w.need!==1)return 'a best of 3 must start with the coin toss';
+    // (a best of 3 can start here without its coin toss: our page reloaded during the toss and the host chose by time)
     if(w.g!==1||w.score[0]||w.score[1]||w.results.length)return 'game '+w.g+' of a match this device does not know';
     if(M&&M.winner==null&&M.results.length)return 'a new match started before this one ended';
     if(M&&M.winner!=null&&M.decks&&!(same(s.hostDeck,M.decks.h)&&same(s.guestDeck,M.decks.g)))return 'the decks changed for the rematch';
@@ -4378,13 +4702,14 @@ mulliganOverlay=function(){
     if(e.target.closest('[data-keep]')){const idx=[...marks].sort((a,b)=>a-b);netExec(G,()=>mulligan(G,0,idx.slice()));NET.mull[0]=true;
       netSend({t:'mull',gid:G.gid,a:idx},true);UI.prevHand=null;
       if(NET.mull[1])return netStartPlay(o);
-      o.innerHTML=`<div class="dlg" style="text-align:center"><h2>Waiting for ${esc(NET.oppName||'your opponent')}</h2><p class="mute">They are choosing their opening hand.</p><div class="spin"></div></div>`;}};
+      netMullWait(o);}};
 };
+const netMullWait=o=>{if(o)o.innerHTML=`<div class="dlg" style="text-align:center"><h2>Waiting for ${esc(NET.oppName||'your opponent')}</h2><p class="mute">They are choosing their opening hand.</p><div class="spin"></div></div>`;};
 function netOnMull(m){const G=UI.G;if(!G||!G.online||m.gid!==G.gid||NET.mull[1]||G.phase!='mulligan')return;
   const a=Array.isArray(m.a)?m.a.filter(i=>Number.isInteger(i)&&i>=0&&i<G.players[1].hand.length):[];
   netExec(G,()=>mulligan(G,1,[...new Set(a)]));NET.mull[1]=true;
-  if(NET.mull[0])netStartPlay(document.querySelector('.overlay.mullo'));}
-function netStartPlay(o){const G=UI.G;if(o)o.remove();netExec(G,()=>startGame(G));renderTable();toast(G.active==0?'You go first.':esc(NET.oppName||'Your opponent')+' goes first.');}
+  if(NET.mull[0])netStartPlay(document.querySelector('.overlay.mullo'));else netSave();}
+function netStartPlay(o){const G=UI.G;if(o)o.remove();netExec(G,()=>startGame(G));renderTable();toast(G.active==0?'You go first.':esc(NET.oppName||'Your opponent')+' goes first.');netSave();}
 
 /* ---------- connection settings ---------- */
 function netLoadLib(){
@@ -4430,23 +4755,104 @@ function netLink(){try{if(!location.origin||location.origin=='null'||!/^https?:/
   return location.origin+location.pathname+'?'+u.toString();}catch(e){return '';}}
 
 /* ---------- connection state ---------- */
-function netStatus(s,msg){NET.status=s;NET.msg=msg||'';if(UI.screen=='online')paintOnline();const b=document.querySelector('.netbar');if(b)netBar();}
+function netStatus(s,msg){NET.status=s;NET.msg=msg||'';if(NET.role&&NET.role!==NET.tabRole){NET.tabRole=NET.role;try{sessionStorage.setItem('ll_role',NET.role);}catch(e){}}if(UI.screen=='online')paintOnline();const b=document.querySelector('.netbar');if(b)netBar();}
 const netSrvErr=e=>['network','server-error','socket-error','socket-closed','disconnected'].includes(e&&e.type);
 function netErrText(e){const t=e&&e.type;return netSrvErr(e)?'Could not reach the matchmaking server. Check your internet connection.'+netClaudeNote():
   t=='browser-incompatible'?'This browser cannot make direct connections.':'Connection problem ('+(t||'unknown')+').';}
 function netReset(){
-  clearInterval(NET.retry);NET.retry=null;clearTimeout(NET.dialT);clearTimeout(NET.rcT);
-  const {pending,conn,peer}=NET;
+  clearInterval(NET.retry);NET.retry=null;clearTimeout(NET.dialT);clearTimeout(NET.rcT);clearTimeout(NET.rlyT);clearTimeout(NET.joinT);
+  const {pending,conn,peer,rl,rpend,role}=NET;
   netPickStop();
   Object.assign(NET,{peer:null,conn:null,role:null,code:null,status:'idle',msg:'',oppName:'',oppDeck:null,game:null,lostAt:0,
-    linked:false,pending:null,pendingAt:0,joinUntil:0,lastFail:'',rcN:0,token:null,oppPeer:null,reopened:false,bye:false,match:null,myDeck:null,outbox:[],rematch:[false,false]});
+    linked:false,pending:null,pendingAt:0,joinUntil:0,lastFail:'',rcN:0,token:null,oppPeer:null,reopened:false,bye:false,match:null,myDeck:null,outbox:[],rematch:[false,false],
+    rl:null,rpend:null,me:null,via:'',noDirect:false,noHost:false,libFail:false,stopDial:false,refused:false,inFail:{},hintWho:'',rlyOnlyErr:false,dirAns:false,rlySeen:false,rlyT0:0});
   // closed after the state is cleared, so their close events find nothing to act on
-  try{pending&&pending.close();}catch(e){}try{conn&&conn.close();}catch(e){}try{peer&&peer.destroy();}catch(e){}
-  netForgetHost();
+  try{pending&&pending.close();}catch(e){}try{rpend&&rpend.close();}catch(e){}try{conn&&conn.close();}catch(e){}try{peer&&peer.destroy();}catch(e){}
+  if(rl)rlyUnlisten(rl);
+  netForgetHost();if(role)netForgetGuest(role);
   document.querySelectorAll('.netbar').forEach(b=>b.remove());
 }
-// the host's game survives a reload of the tab (iOS reloads tabs it put to sleep) for a few minutes
-function netKeepHost(){if(NET.role=='host'&&NET.code&&NET.token&&!netInMatch())try{localStorage.setItem('ll_host',JSON.stringify({code:NET.code,token:NET.token,t:Date.now()}));}catch(e){}}
+// the guest's own id (the same on every line and after a reload), else its PeerJS id
+const netWho=c=>c&&(c.metadata&&typeof c.metadata.me=='string'&&c.metadata.me||c.peer)||'';
+const netVia=()=>NET.conn&&NET.conn.open&&NET.linked?(NET.conn.relay?'Relay':'Direct'):'';
+const netRelayCan=()=>typeof rlyCan=='function'&&rlyCan();
+const netRelayUp=()=>!!(NET.rl&&NET.rl.ready&&rlyUp());
+const netRelayTrying=()=>!!(NET.rpend&&!NET.rpend.closed);
+if(typeof RLY=='object')RLY.onchange=()=>{
+  // the host is findable on the relay (also when it came up after netRelayOnly gave up on it)
+  if(NET.role=='host'&&!netInMatch()&&(NET.status=='loading'||NET.status=='error'&&NET.rlyOnlyErr)&&netRelayUp()){NET.rlyOnlyErr=false;netKeepHost();
+    netStatus('waiting',NET.reopened?'Your game '+NET.code+' is open again. Waiting for your friend…':'');}
+  else if(UI.screen=='online')paintOnline();
+};
+
+/* ---------- a match survives a reload (iOS reloads tabs it put to sleep), on both sides ----------
+   ll_net (guest) / ll_neth (host): the game, our outbox, the moves we got. Saved before a move of ours goes out and
+   after each of theirs, so after a reload the hello's resume and our outbox match what the other side has. Before a
+   game of the match exists (lobby, coin toss) the guest keeps only the code, its id and its deck ("lite"), so it can
+   take its seat again; the host then keeps its code (ll_host) and starts the match again. */
+const NET_LITE_KEEP=180000;
+const netKey=r=>r=='host'?'ll_neth':'ll_net';
+function netForgetGuest(r){try{localStorage.removeItem(netKey(r||NET.role));}catch(e){}}
+function netSave(){
+  if(!NET.role||!NET.code)return;const host=NET.role=='host',M=NET.match,G=UI.G,open=!!M&&M.winner==null&&M.phase!='stopped';
+  try{
+    if(open&&G&&G.online&&G.mid===M.mid&&NET.game&&G.gid===NET.game.gid)
+      return localStorage.setItem(netKey(NET.role),JSON.stringify({v:netVersion(),role:NET.role,code:NET.code,me:NET.me,token:host?NET.token:undefined,t:Date.now(),
+        opp:NET.oppName,oppPeer:host?NET.oppPeer:undefined,deck:NET.myDeck,via:NET.via,rs:host&&NET.rl&&typeof rlySids=='function'?rlySids(NET.rl):undefined,
+        M,game:NET.game,sent:NET.sent,recv:NET.recv,outbox:NET.outbox,mull:NET.mull,g:snapG(G),uid:UID}));
+    if(!host&&NET.me&&(open||!M&&NET.linked))
+      return localStorage.setItem('ll_net',JSON.stringify({v:netVersion(),role:'guest',lite:1,code:NET.code,me:NET.me,deck:NET.myDeck,t:Date.now()}));
+  }catch(e){}
+  netForgetGuest();
+}
+function netSavedGuest(role){
+  role=role||'guest';
+  try{const s=JSON.parse(localStorage.getItem(netKey(role))||'null'),age=s?Date.now()-s.t:-1;
+    if(s&&s.v===netVersion()&&(s.role||'guest')===role&&/^[A-Z0-9]{6}$/.test(s.code)&&age>=0){
+      if(s.lite)return role=='guest'&&typeof s.me=='string'&&age<NET_LITE_KEEP?s:(netForgetGuest(role),null);
+      if((role=='host'?typeof s.token=='string'&&typeof s.oppPeer=='string':typeof s.me=='string')&&okMatch(s.M)&&s.game&&typeof s.game.gid=='string'&&
+        typeof s.g=='string'&&Array.isArray(s.outbox)&&age<NET_HOST_KEEP)return s;}}catch(e){}
+  netForgetGuest(role);return null;
+}
+// the guest's id and deck for this code, from before a reload (so the host knows it again)
+function netSavedMe(code){try{const s=JSON.parse(localStorage.getItem('ll_net')||'null');
+  if(s&&s.code===code&&s.v===netVersion()&&typeof s.me=='string'&&Date.now()-s.t<NET_HOST_KEEP)return s;}catch(e){}return null;}
+// put a restored game on the screen (either side), as it was
+function netShowGame(G,s){
+  UID=Math.max(UID,s.uid|0);G.online=true;G.events=[];
+  UI.metaRun=false;UI.G=G;app.innerHTML='';UI.focus=null;UI.target=null;UI.busy=false;UI.lastActive=G.phase=='play'?G.active:null;UI.hover=null;UI.undo=[];UI.prevHand=null;
+  UI.asc=[0,1].map(pi=>ascendant(G,pi));if(SIDE_MQ.matches)UI.side=false;UI.screen='game';hideZoom();renderTable();
+  if(G.winner!=null)netShowEnd();
+  else if(G.phase=='mulligan'){if(NET.mull[0]&&NET.mull[1])netStartPlay(null);else{mulliganOverlay();if(NET.mull[0])netMullWait(document.querySelector('.overlay.mullo'));}}
+}
+function netResume(s){
+  let G=null;try{G=restoreG(s.g);}catch(e){}
+  if(!G||!Array.isArray(G.players)||G.gid!==s.game.gid)return netForgetGuest('guest');
+  netReset();
+  Object.assign(NET,{role:'guest',code:s.code,joinCode:s.code,me:s.me,oppName:cleanName(s.opp)||'Opponent',myDeck:s.deck,via:s.via||'',match:s.M,game:s.game,
+    sent:s.sent|0,recv:s.recv|0,outbox:s.outbox,mull:Array.isArray(s.mull)?s.mull:[false,false],joinUntil:Date.now()+NET_JOIN_MS,status:'lost',lostAt:Date.now(),
+    noDirect:s.via=='relay'});   // a relay game goes back to the relay at once
+  s.M.pickRun=0;netShowGame(G,s);
+  netSave();netBar();netRetry();netDial(true);netTick();
+  netLoadLib().then(()=>{if(NET.role=='guest'&&NET.code===s.code&&!NET.peer)netGuestPeer();},()=>netNoDirect());
+}
+// the host's page reloaded mid-match: the same code (matchmaking server and relay), the game as it was; the guest's
+// reconnect finds us and the outboxes resend what the other missed
+function netResumeHost(s){
+  let G=null;try{G=restoreG(s.g);}catch(e){}
+  if(!G||!Array.isArray(G.players)||G.gid!==s.game.gid)return netForgetGuest('host');
+  netReset();
+  Object.assign(NET,{role:'host',code:s.code,token:s.token,reopened:true,oppName:cleanName(s.opp)||'Opponent',oppPeer:s.oppPeer,via:s.via||'',match:s.M,game:s.game,
+    sent:s.sent|0,recv:s.recv|0,outbox:s.outbox,mull:Array.isArray(s.mull)?s.mull:[false,false],status:'lost',lostAt:Date.now()});
+  s.M.pickRun=0;netShowGame(G,s);
+  netRelayListen(s.rs);netSave();netBar();netRetry();netTick();
+  netLoadLib().then(()=>{if(NET.role=='host'&&NET.code===s.code&&!NET.peer)netHostPeer(0);},()=>{NET.libFail=true;});
+}
+// the host's game survives a reload of the tab (iOS reloads tabs it put to sleep) for a few minutes: the code in the
+// lobby and during the coin toss (later, ll_neth has the whole game)
+function netKeepHost(){const M=NET.match;
+  if(NET.role=='host'&&NET.code&&NET.token&&(!netInMatch()||M&&M.winner==null&&M.phase=='toss'&&!(UI.G&&UI.G.online&&UI.G.mid===M.mid)))
+    try{localStorage.setItem('ll_host',JSON.stringify({code:NET.code,token:NET.token,t:Date.now()}));}catch(e){}}
 function netForgetHost(){try{localStorage.removeItem('ll_host');}catch(e){}}
 function netSavedHost(){try{const h=JSON.parse(localStorage.getItem('ll_host')||'null'),age=h?Date.now()-h.t:-1;
   if(h&&/^[A-Z0-9]{6}$/.test(h.code)&&typeof h.token=='string'&&age>=0&&age<NET_HOST_KEEP)return h;}catch(e){}return null;}
@@ -4456,7 +4862,8 @@ function netServerLost(peer){
   clearTimeout(NET.rcT);const d=Math.min(15000,1000*2**Math.min(NET.rcN++,4));
   NET.rcT=setTimeout(()=>{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed){try{peer.reconnect();}catch(e){}netSettle(peer);}},d);
   if(netInMatch()||NET.status=='connected')return;
-  if(NET.role=='host')netStatus(peer.__opened?'waiting':'loading',peer.__opened?'Reconnecting to the matchmaking server… Your code stays the same.':'Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());
+  if(NET.role=='host'){if(netRelayUp())return;   // the relay keeps the game findable
+    netStatus(peer.__opened?'waiting':'loading',peer.__opened?'Reconnecting to the matchmaking server… Your code stays the same.':'Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());}
   else if(NET.role=='guest')netStatus('loading','Reconnecting to the matchmaking server…');
 }
 
@@ -4473,59 +4880,111 @@ function netSettle(peer){setTimeout(()=>{
 function netSock(p){const ws=p&&p.socket&&p.socket._socket;return !!(p&&!p.destroyed&&!p.disconnected&&ws&&ws.readyState===1&&(p.open||p.__opened));}
 
 /* ---------- hosting ---------- */
+// The host can be found two ways at once: on the PeerJS matchmaking server (direct) and on the relay. Either is enough.
 async function netHost(resume){
   netReset();NET.role='host';
   if(resume){NET.code=resume.code;NET.token=resume.token;NET.reopened=true;}else{NET.code=netCode();NET.token=netToken();}
   netKeepHost();netStatus('loading',resume?'Opening your game again…':'Starting…');
-  try{await netLoadLib();}catch(e){return netStatus('error',netLibErr());}
+  netRelayListen();
+  try{await netLoadLib();}catch(e){if(NET.role!='host')return;NET.libFail=true;return netRelayCan()?netRelayOnly(netLibErr()):netStatus('error',netLibErr());}
   if(NET.role!='host'||NET.peer)return;              // cancelled while the library loaded
   netHostPeer(0);
+}
+// direct connections cannot work here: the relay alone has 20 s to come up
+// (if the relay comes up later after all, RLY.onchange opens the game again)
+function netRelayOnly(msg){const code=NET.code;setTimeout(()=>{if(NET.role=='host'&&NET.code===code&&NET.status=='loading'&&!netRelayUp()){NET.rlyOnlyErr=true;netStatus('error',msg);}},20000);}
+function netRelayListen(gone){
+  if(NET.rl){rlyUnlisten(NET.rl);NET.rl=null;}
+  if(NET.role!='host'||!NET.code||!netRelayCan())return;
+  NET.rl=rlyListen(NET.code,c=>{if(NET.role=='host')netHostConn(c);else c.close();},gone);
 }
 function netHostPeer(tries){
   const peer=NET.peer=new Peer(NET_PREFIX+NET.code,netPeerOpts({token:NET.token}));if(NET.reopened)netSettle(peer);
   peer.on('open',()=>{if(NET.peer!==peer)return;peer.__opened=true;NET.rcN=0;clearTimeout(NET.rcT);
     if(netInMatch()||NET.status=='connected')return;     // back on the matchmaking server mid-game: nothing else changes
     netKeepHost();netStatus('waiting',NET.reopened?'Your game '+NET.code+' is open again. Waiting for your friend…':'');});
-  peer.on('connection',c=>{
-    if(NET.peer!==peer)return;
-    // during a match only our opponent may reconnect; in the lobby, one guest at a time
-    const busy=netInMatch()?c.peer!==NET.oppPeer:!!(NET.conn&&NET.conn.open&&NET.conn.peer!==c.peer);
-    if(busy){c.on('open',()=>{try{c.send({t:'busy'});}catch(e){}setTimeout(()=>{try{c.close();}catch(e){}},500);});return;}
-    netWire(c);netIncoming(c);});
+  peer.on('connection',c=>{if(NET.peer===peer)netHostConn(c);});
   peer.on('disconnected',()=>netServerLost(peer));
   peer.on('error',e=>{if(NET.peer!==peer)return;if(e.type=='peer-unavailable'||e.type=='negotiation-failed'||e.type=='connection-closed')return;
     setTimeout(()=>netHostErr(peer,e,tries),0);});      // PeerJS destroys or disconnects the peer right after this event
+}
+// a guest opens a line to us (direct, or through the relay)
+function netHostConn(c){
+  // during a match only our opponent may come back (on any line); in the lobby, one guest at a time
+  const busy=netInMatch()?netWho(c)!==NET.oppPeer:!!(NET.conn&&NET.conn.open&&netWho(NET.conn)!==netWho(c));
+  if(busy){c.on('open',()=>{try{c.send({t:'busy'});}catch(e){}setTimeout(()=>{try{c.close();}catch(e){}},500);});return;}
+  // a Leyline from before the relay does not name itself (metadata.me), a newer one says its version (metadata.v): say
+  // so at once, as the direct line may never open to exchange hellos (the hello still refuses it if it does)
+  const md=c.metadata||{};
+  if(!c.relay&&!netInMatch()&&(typeof md.me!='string'||md.v&&md.v!==netVersion()))netStatus('error',NET_OLD);
+  netWire(c);netIncoming(c);
 }
 function netHostErr(peer,e,tries){
   if(NET.peer!==peer)return;
   if(e.type=='unavailable-id'){
     if(!peer.destroyed)return;                         // a reconnect was refused: netServerLost tries again
     // the code is taken. A reopened game waits for the server to let go of its old connection (about 100 s).
-    if(NET.reopened&&tries<24){netStatus('loading','Opening your game '+NET.code+' again…');clearTimeout(NET.rcT);NET.rcT=setTimeout(()=>{if(NET.peer===peer)netHostPeer(tries+1);},5000);return;}
-    NET.code=netCode();NET.token=netToken();NET.reopened=false;netKeepHost();return netHostPeer(0);}
+    // (mid-match the code must stay: keep trying, the relay keeps the game reachable meanwhile)
+    if(NET.reopened&&(tries<24||netInMatch())){if(!netInMatch())netStatus('loading','Opening your game '+NET.code+' again…');
+      clearTimeout(NET.rcT);NET.rcT=setTimeout(()=>{if(NET.peer===peer)netHostPeer(tries+1);},5000);return;}
+    NET.code=netCode();NET.token=netToken();NET.reopened=false;netKeepHost();netRelayListen();return netHostPeer(0);}
   if(!peer.destroyed&&(netSrvErr(e)||peer.disconnected))return;   // matchmaking dropped: netServerLost retries and keeps the code
   if(netInMatch()||NET.status=='connected')return;
-  if(peer.destroyed&&netSrvErr(e)){netStatus('loading','Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());
+  if(peer.destroyed&&netSrvErr(e)){if(!netRelayUp())netStatus('loading','Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());
     clearTimeout(NET.rcT);NET.rcT=setTimeout(()=>{if(NET.peer===peer)netHostPeer(tries);},Math.min(15000,1000*2**Math.min(NET.rcN++,4)));return;}
+  if(netRelayCan()){console.warn('Leyline: direct connections are not available:',e&&e.type);return netRelayOnly(netErrText(e));}
   netStatus('error',netErrText(e));
 }
 // a guest is connecting to us: say so, and drop the attempt if it never opens
 function netIncoming(c){
-  if(!netInMatch()&&NET.status=='waiting')netStatus('waiting','Your friend is connecting…');
+  const who=netWho(c);
+  if(!netInMatch()&&NET.status=='waiting'&&NET.hintWho!==who)netStatus('waiting','Your friend is connecting…');
   setTimeout(()=>{if(c.open)return;try{c.close();}catch(e){}
-    if(NET.role=='host'&&!netInMatch()&&NET.status=='waiting'&&!(NET.conn&&NET.conn.open))
-      netStatus('waiting','Your friend could not connect directly yet. Their device keeps trying. Same Wi-Fi works best; on mobile data one of you may need a relay server (Connection help, below).');},NET_DIAL_MS+3000);
+    if(NET.role!='host'||netInMatch()||NET.status!='waiting'||(NET.conn&&NET.conn.open))return;
+    // two direct attempts from this guest failed and it has no relay line: its relay is off (or cannot reach the servers)
+    const n=c.relay?0:NET.inFail[who]=(NET.inFail[who]||0)+1,onRelay=!!(NET.rl&&Object.values(NET.rl.ss).some(x=>netWho(x)===who));
+    if(n>=2&&netRelayCan()&&!onRelay){NET.hintWho=who;return netStatus('waiting',NET_GUESTNORLY);}
+    if(NET.hintWho!==who)netStatus('waiting',netRelayCan()?'Your friend is still connecting… Keep Leyline open.':'Your friend could not connect directly yet. Their device keeps trying. The relay is off (Connection help).');},NET_DIAL_MS+3000);
 }
 
-/* ---------- joining ---------- */
+/* ---------- joining ----------
+   The guest tries both ways at once. The relay line is ready in about a second but only used if the direct one has
+   not opened within NET_GRACE (at once when direct cannot work). The first line to open is used, the other closed. */
 async function netJoin(raw){
   const code=netCodeFrom(raw);if(!code)return toast('Enter the 6-character game code.');
   if(/[ILO01]/.test(code))return toast('Game codes never use I, L, O, 0 or 1. Check the code and try again.');
-  netReset();NET.role='guest';NET.code=code;NET.joinCode=code;NET.joinUntil=Date.now()+NET_JOIN_MS;netStatus('loading','Connecting…');
-  try{await netLoadLib();}catch(e){return netStatus('error',netLibErr());}
+  // the same code again after a reload (coin toss, lobby): the same id and deck, so the host gives us our seat back
+  const old=netSavedMe(code);
+  netReset();NET.role='guest';NET.code=code;NET.joinCode=code;NET.me=old?old.me:netToken();NET.joinUntil=Date.now()+NET_JOIN_MS;netStatus('loading','Connecting…');
+  if(old&&old.deck&&netDeckOK(old.deck))NET.myDeck=old.deck;
+  NET.joinT=setTimeout(netJoinEnd,NET_JOIN_MS+1500);
+  NET.rlyT0=Date.now();netRelayDial();
+  try{await netLoadLib();}catch(e){if(NET.role=='guest'&&NET.code===code){NET.libFail=true;netNoDirect();if(!netRelayTrying()){netStatus('error',netLibErr());netGuestStop();}}return;}
   if(NET.role!='guest'||NET.code!==code||NET.peer)return;
   netGuestPeer();
 }
+function netJoinEnd(){
+  if(NET.role!='guest'||netInMatch()||NET.status!='loading'||(NET.conn&&NET.conn.open))return;
+  netStatus('error',NET.lastFail=='direct'?'Could not connect. '+(netHostNoRelay()?NET_NORLYHOST:NET_FAILALL):'No game with code '+NET.code+' answered. Check the code, ask the host to keep Leyline open, then tap Join again.');
+  netGuestStop();
+}
+// the guest has given up (or was refused): no more attempts, no relay hellos, until Join is tapped again
+function netGuestStop(){
+  if(NET.role!='guest')return;
+  NET.joinUntil=0;NET.stopDial=true;clearTimeout(NET.dialT);clearTimeout(NET.rlyT);clearTimeout(NET.joinT);
+  const {pending,rpend}=NET;NET.pending=null;NET.rpend=null;
+  try{if(pending&&!pending.open)pending.close();}catch(e){}try{if(rpend&&!rpend.open)rpend.close();}catch(e){}
+}
+// the relay attempt alone ends (the opponent is gone): direct attempts may go on as before
+function netRelayStop(){clearTimeout(NET.rlyT);const r=NET.rpend;NET.rpend=null;try{if(r&&!r.open)r.close();}catch(e){}}
+// the host's device answered the direct attempt, but no relay line came in 10 s although our relay is up: the host
+// has an older Leyline (no relay) or its relay off
+const netHostNoRelay=()=>!!(NET.dirAns&&!NET.rlySeen&&typeof rlyUp=='function'&&rlyUp()>0&&NET.rlyT0&&Date.now()-NET.rlyT0>10000);
+const NET_OLD='You and your opponent have different versions of Leyline. Both of you: reload the page (or close Leyline and open it again), then try again.',
+  NET_NODIRECT='Your two devices could not reach each other directly, and the relay is off on this device (Connection help, below).',
+  NET_FAILALL='Neither a direct connection nor the relay worked. Check that both devices are online, ask the host to keep Leyline open, then tap Join again. On school or office Wi-Fi, try mobile data.',
+  NET_NORLYHOST='The host’s device answered but could not connect directly, and it did not answer on the relay. If Leyline was updated recently, both of you: reload the page (or close Leyline and open it again), then try again. Otherwise ask the host to check that the relay is on (Connection help).',
+  NET_GUESTNORLY='Your friend’s device could not connect directly. If it still does not work, ask them to check that the relay is on (Connection help).';
 function netGuestPeer(){
   const peer=NET.peer=new Peer(undefined,netPeerOpts());
   peer.on('open',()=>{if(NET.peer!==peer)return;peer.__opened=true;NET.rcN=0;clearTimeout(NET.rcT);
@@ -4539,58 +4998,91 @@ function netGuestPeer(){
 function netGuestErr(peer,e){
   if(NET.peer!==peer||netInMatch()||NET.status=='connected')return;
   if(!peer.destroyed&&(netSrvErr(e)||peer.disconnected))return;   // netServerLost retries
+  netNoDirect();
   if(peer.destroyed&&netSrvErr(e)&&Date.now()<NET.joinUntil){      // never reached the server: start over in a moment
-    netStatus('loading','Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());
+    if(!netRelayTrying())netStatus('loading','Could not reach the matchmaking server yet. Trying again…'+netClaudeNote());
     clearTimeout(NET.rcT);NET.rcT=setTimeout(()=>{if(NET.peer===peer&&NET.role=='guest')netGuestPeer();},Math.min(15000,1000*2**Math.min(NET.rcN++,4)));return;}
-  netStatus('error',netErrText(e));
+  if(!netRelayTrying()){netStatus('error',netErrText(e));netGuestStop();}
 }
-function netDial(force){
+// dial the host both ways (each only when no attempt is running)
+function netDial(force){if(NET.stopDial)return;netRelayDial();netDirect(force);}
+function netDirect(force){
   const p=NET.peer;if(!p||p.destroyed||NET.role!='guest'||(NET.conn&&NET.conn.open))return;   // connected (or saying hello): no second line
   const old=NET.pending;
   if(old&&!old.open&&!force&&Date.now()-NET.pendingAt<NET_DIAL_MS)return;   // the current attempt still has time
   if(old&&!old.open){try{old.close();}catch(e){}}NET.pending=null;clearTimeout(NET.dialT);
   if(!netSock(p)){if(p.disconnected){clearTimeout(NET.rcT);try{p.reconnect();}catch(e){}netSettle(p);}return;}   // the 'open' handler dials
-  let c=null;try{c=p.connect(NET_PREFIX+NET.code,{reliable:true,serialization:'json'});}catch(e){console.warn('Leyline: connect failed',e);}
+  let c=null;try{c=p.connect(NET_PREFIX+NET.code,{reliable:true,serialization:'json',metadata:{me:NET.me,v:netVersion()}});}catch(e){console.warn('Leyline: connect failed',e);}
   if(!c)return;
-  NET.pending=c;NET.pendingAt=Date.now();netWire(c);
+  NET.pending=c;NET.pendingAt=Date.now();NET.noHost=false;netWire(c);
   NET.dialT=setTimeout(()=>netDialFail(c,'timeout'),NET_DIAL_MS);
+}
+function netRelayDial(){
+  if(NET.role!='guest'||!NET.code||NET.stopDial||NET.status=='gone'||(NET.conn&&NET.conn.open)||netRelayTrying()||!netRelayCan())return;
+  const c=NET.rpend=rlyDial(NET.code,NET.me);c.t0=Date.now();netWire(c);
+  c.on('ready',()=>netRelayGo(c));
+  c.on('close',()=>{if(NET.rpend===c){NET.rpend=null;clearTimeout(NET.rlyT);}});
+}
+function netNoDirect(){NET.noDirect=true;if(NET.rpend)netRelayGo(NET.rpend);}
+// the relay line is ready: use it once the current direct attempt had its time (now if none can work)
+function netRelayGo(c){
+  if(NET.rpend!==c||c.open||c.closed||!c.ready||NET.role!='guest'||(NET.conn&&NET.conn.open))return;
+  clearTimeout(NET.rlyT);NET.rlySeen=true;if(!c.seenAt)c.seenAt=Date.now();
+  const hope=!(NET.noDirect||NET.libFail);
+  // the host answered on the relay, so it is there now. If it was not before (not on the matchmaking server yet, or our
+  // relay hellos went unanswered for a while: it was in another app), the direct attempt never had a fair chance: dial
+  // it again at once and give it its time (once per relay line)
+  const away=NET.noHost&&!NET.pending||!!c.helloAt&&c.seenAt-c.helloAt>4000&&!(NET.pending&&Date.now()-NET.pendingAt<NET_GRACE_RC);
+  if(hope&&away&&!c.redial){c.redial=true;NET.noHost=false;netDirect(true);}
+  const wait=hope?(NET.pending?NET.pendingAt:c.seenAt)+(netInMatch()?NET_GRACE_RC:NET_GRACE)-Date.now():0;
+  if(wait>0){NET.rlyT=setTimeout(()=>netRelayGo(c),wait);return;}
+  // direct had its time (or cannot work): a reconnect of this game goes straight back to the relay
+  NET.noDirect=true;c.activate();
 }
 // the host's code is not on the matchmaking server (yet, or for a moment while their phone is in another app)
 function netNoHost(){
   if(NET.pending&&!NET.pending.open){try{NET.pending.close();}catch(e){}NET.pending=null;}
-  clearTimeout(NET.dialT);if(netInMatch()||(NET.conn&&NET.conn.open))return;   // mid-game the reconnect loop keeps dialling
-  NET.lastFail='nohost';
-  if(Date.now()<NET.joinUntil){netStatus('loading','Waiting for the host… If they switched apps, ask them to come back to Leyline.');NET.dialT=setTimeout(()=>netDial(true),3000);return;}
-  netStatus('error','No game with code '+NET.code+' right now. Check the code, and ask the host to keep Leyline open.');
+  NET.noHost=true;clearTimeout(NET.dialT);
+  if(!(netInMatch()||(NET.conn&&NET.conn.open))){   // mid-game the reconnect loop keeps dialling
+    NET.lastFail='nohost';
+    if(Date.now()>=NET.joinUntil){netStatus('error','No game with code '+NET.code+' right now. Check the code, and ask the host to keep Leyline open.');return netGuestStop();}
+    netStatus('loading','Waiting for the host… If they switched apps, ask them to come back to Leyline.');NET.dialT=setTimeout(()=>netDial(true),3000);}
+  if(NET.rpend)netRelayGo(NET.rpend);   // last: it may dial direct again at once
 }
 // a connection attempt that did not open in time, or whose direct connection failed
 function netDialFail(c,why){
   if(c.open||NET.pending!==c)return;
-  const answered=!!(c.peerConnection&&c.peerConnection.remoteDescription)||why!='timeout';
+  const ans=!!(c.peerConnection&&c.peerConnection.remoteDescription),answered=ans||why!='timeout';
   try{c.close();}catch(e){}NET.pending=null;clearTimeout(NET.dialT);
+  if(ans)NET.dirAns=true;
+  if(answered)netNoDirect();
   if(netInMatch()||(NET.conn&&NET.conn.open)){netDial(true);return;}
   NET.lastFail=answered?'direct':'nohost';
-  const wait='Waiting for the host… If they switched apps, ask them to come back to Leyline.',
-    direct='Your two devices could not reach each other directly. Same Wi-Fi works best; on mobile data one of you may need a relay server (Connection help, below).';
-  if(Date.now()<NET.joinUntil){netStatus('loading',answered?'Still trying to connect… '+direct:wait);netDial(true);return;}
-  netStatus('error',answered?'Could not connect. '+direct:'The host did not answer. Ask them to keep Leyline open on the lobby, then tap Join again.');
+  const wait='Waiting for the host… If they switched apps, ask them to come back to Leyline.',relay=netRelayTrying(),old=answered&&netHostNoRelay();
+  if(Date.now()<NET.joinUntil){netStatus('loading',answered?(old?NET_NORLYHOST:relay?'Connecting through the relay…':'Still trying to connect… '+NET_NODIRECT):wait);netDial(true);return;}
+  netStatus('error',answered?'Could not connect. '+(old?NET_NORLYHOST:relay?NET_FAILALL:NET_NODIRECT):'The host did not answer. Ask them to keep Leyline open on the lobby, then tap Join again.');
+  netGuestStop();
 }
 
 /* ---------- the data connection ---------- */
 function netWire(c){
   c.on('open',()=>{
     if(!NET.role||NET.status=='idle'){try{c.close();}catch(e){}return;}
-    // the reconnect countdown keeps running until the hello is accepted (a refused line must not freeze it)
-    const old=NET.conn;NET.conn=c;NET.linked=false;
-    // this line is the one: stop any other attempt and its timers
-    clearTimeout(NET.dialT);if(NET.pending&&NET.pending!==c)try{NET.pending.close();}catch(e){}NET.pending=null;
-    // an older connection to the same opponent is closed a little later, once both sides use the new one
-    if(old&&old!==c)setTimeout(()=>{if(NET.conn!==old)try{old.close();}catch(e){}},3000);
     if(NET.role=='guest'&&!NET.myDeck)NET.myDeck=netMyDeck();     // the deck we join with (a quick deck is built once)
-    netWatch(c);
     // got: we already took their hello on this line (so a repeat of theirs only needs ours again)
     c.__hello=()=>{try{c.send({t:'hello',v:netVersion(),name:netName(),deck:NET.role=='guest'?NET.myDeck:null,fmt:NET.role=='host'?NET.fmt:null,
       resume:NET.match?{mid:NET.match.mid,gid:NET.game?NET.game.gid:null,recv:NET.recv}:null,got:!!c.__acc});}catch(e){}};
+    // the host keeps its line until the guest says hello on the new one (the guest picks the line): also before the
+    // hello on the current one arrived, as the guest may have chosen either
+    if(NET.role=='host'&&NET.conn&&NET.conn!==c&&NET.conn.open&&(NET.linked||netWho(c)===netWho(NET.conn))){c.__cand=true;netWatch(c);c.__hello();return;}
+    // the reconnect countdown keeps running until the hello is accepted (a refused line must not freeze it)
+    const old=NET.conn;NET.conn=c;NET.linked=false;c.__cand=false;if(old&&old!==c)old.__old=true;
+    // this line is the one: stop any other attempt and its timers
+    clearTimeout(NET.dialT);if(NET.pending&&NET.pending!==c)try{NET.pending.close();}catch(e){}NET.pending=null;
+    clearTimeout(NET.rlyT);if(NET.rpend&&NET.rpend!==c)try{NET.rpend.close();}catch(e){}NET.rpend=null;
+    // an older connection to the same opponent is closed a little later, once both sides use the new one
+    if(old&&old!==c)setTimeout(()=>{if(NET.conn!==old)try{old.close();}catch(e){}},3000);
+    netWatch(c);
     c.__hello();
     // the first message on a new data channel can be lost: say hello again until the other side's hello arrives
     const hT=setInterval(()=>{if(NET.conn!==c||!c.open||NET.linked||NET.status=='error'||NET.status=='idle')return clearInterval(hT);c.__hello();},1500);
@@ -4609,18 +5101,24 @@ function netWatch(c){const pc=c.peerConnection;if(!pc||pc.__nw||typeof pc.addEve
   const chk=()=>{clearTimeout(t);const s=st();if(s=='failed'||s=='closed')return dead();
     if(s=='disconnected'||pc.iceConnectionState=='disconnected')t=setTimeout(()=>{if(st()!='connected'||pc.iceConnectionState=='disconnected')dead();},6000);};
   pc.addEventListener('connectionstatechange',chk);pc.addEventListener('iceconnectionstatechange',chk);chk();}
-function netLinked(){NET.linked=true;NET.lostAt=0;clearInterval(NET.retry);NET.retry=null;}
+function netLinked(){NET.linked=true;NET.lostAt=0;clearInterval(NET.retry);NET.retry=null;
+  const v=NET.conn&&NET.conn.relay?'relay':'direct';if(NET.via!==v){NET.via=v;if(UI.screen=='game')renderTable();}netSave();}
+function netTake(c){const old=NET.conn;NET.conn=c;NET.linked=false;c.__cand=false;if(old&&old!==c){old.__old=true;setTimeout(()=>{if(NET.conn!==old)try{old.close();}catch(e){}},3000);}}
 function netOnData(c,m){
-  if(!m||typeof m!='object'||c!==NET.conn)return;
+  if(!m||typeof m!='object')return;
+  if(c!==NET.conn){if(m.t=='hello'&&c.__cand&&!c.__old&&c.open&&NET.role=='host')netTake(c);else return;}
   switch(m.t){
     case 'hello':{
-      if(m.v!==netVersion()){c.send({t:'refuse',why:'version'});return netStatus('error','Your opponent has a different version of Leyline. You both need the same version: both refresh the page.');}
+      if(m.v!==netVersion()){c.send({t:'refuse',why:'version'});netStatus('error',NET_OLD);return netRefused(c);}
       if(c.__acc){if(!m.got&&c.__hello)c.__hello();return;}   // said again: they did not get our hello yet
       NET.oppName=cleanName(m.name)||'Opponent';if(NET.match)NET.match.opp=NET.oppName;
       const M=NET.match;
       if(m.resume&&M&&m.resume.mid===M.mid){                  // reconnect, in this game or a later one: resend what they missed
         const same=!!NET.game&&m.resume.gid===NET.game.gid;
-        NET.outbox.filter(x=>x.t!='act'||!same||x.n>m.resume.recv).forEach(x=>c.send(x));
+        NET.outbox.filter(x=>x.t!='act'||!same||x.n>m.resume.recv).forEach(x=>c.send(x));netClockTo(c);
+        const was=NET.status;c.__acc=true;netLinked();netStatus('connected');netBar();if(was=='lost'||was=='gone')toast('Reconnected to '+esc(NET.oppName)+'.');netTick();return;}
+      // our opponent is back without this match (it missed the start on another line, or its page reloaded): everything again
+      if(NET.role=='host'&&M&&M.winner==null&&NET.oppPeer&&netWho(c)===NET.oppPeer){NET.outbox.forEach(x=>c.send(x));netClockTo(c);
         const was=NET.status;c.__acc=true;netLinked();netStatus('connected');netBar();if(was=='lost'||was=='gone')toast('Reconnected to '+esc(NET.oppName)+'.');netTick();return;}
       // a match is set up or running: nobody new may take the seat
       if(NET.role=='host'&&(M&&M.winner==null||NET.game&&UI.G&&UI.G.online&&UI.G.winner==null)){c.send({t:'busy'});return;}
@@ -4628,7 +5126,7 @@ function netOnData(c,m){
       if(NET.role=='host'){
         if(M)return netStatus('connected');                     // the match is over: they are back for the rematch
         if(!netDeckOK(m.deck)){c.send({t:'refuse',why:'deck'});return netStatus('error','Your opponent’s deck is not legal in this version.');}
-        NET.oppDeck=m.deck;NET.oppPeer=c.peer;netStatus('connected');netNewMatch();
+        NET.oppDeck=m.deck;NET.oppPeer=netWho(c);netStatus('connected');netNewMatch();
       } else if(!M)netStatus('connected','Connected to '+NET.oppName+' · '+(m.fmt=='bo3'?'Best of 3':'Single game')+'. Waiting for the host to start…');
       else netStatus('connected');
       return;}
@@ -4636,6 +5134,7 @@ function netOnData(c,m){
     case 'toss':return netOnToss(m);
     case 'pick':return netOnPick(m);
     case 'gend':return netOnGend(m);
+    case 'clock':return netOnClock(m);
     case 'act':return netOnAct(m);
     case 'mull':return netOnMull(m);
     case 'concede':return netOnConcede(m);
@@ -4643,11 +5142,19 @@ function netOnData(c,m){
       if(NET.role=='host'&&NET.rematch[0])return netNewMatch(true);
       toast(esc(NET.oppName)+' wants a rematch.');return;}
     case 'desync':if(UI.G&&UI.G.online&&(UI.G.winner==null||NET.match&&NET.match.winner==null&&NET.match.phase!='stopped'))netDesync(String(m.why||'The games no longer match.').slice(0,200));return;
-    case 'refuse':return netStatus('error',m.why=='version'?'The host has a different version of Leyline. You both need the same version: both refresh the page.':'The host could not accept your deck.');
-    case 'busy':return netStatus('error','That game already has two players.');
+    case 'refuse':netStatus('error',m.why=='version'?NET_OLD:'The host could not accept your deck.');return netRefused(c);
+    case 'busy':netStatus('error','That game already has two players.');return netRefused(c);
     case 'bye':NET.bye=true;return;
   }
 }
+// refused (busy, other version, deck): a guest in the lobby stops trying, so the message stays (Join tries again)
+function netRefused(c){if(NET.role!='guest'||netInMatch())return;NET.refused=true;netGuestStop();setTimeout(()=>{try{c.close();}catch(e){}},500);}
+// the host's choice clock after a reconnect: the time left, so the guest does not show its own stale count
+function netClockTo(c){const M=NET.match;if(NET.role=='host'&&M&&M.winner==null&&(M.phase=='toss'||M.phase=='between')&&M.dealt!==M.g)
+  try{c.send({t:'clock',mid:M.mid,g:M.g,left:Math.max(0,Math.round(M.pickLeft))});}catch(e){}}
+function netOnClock(m){const M=NET.match;
+  if(NET.role!='guest'||!M||m.mid!==M.mid||m.g!==M.g||M.winner!=null||M.dealt===M.g||!(M.phase=='toss'||M.phase=='between')||typeof m.left!='number')return;
+  M.pickLeft=Math.max(0,Math.min(NET_PICK_MS,m.left));M.pickRun=0;netTick();}
 // the opponent conceded the game, or the match ('match' also counts between games)
 function netOnConcede(m){
   const M=NET.match,G=UI.G;if(!M||(m.mid&&m.mid!==M.mid)||M.phase=='stopped')return;   // stopped out of sync: nothing counts
@@ -4675,43 +5182,49 @@ function netLost(c){
   NET.linked=false;
   if(NET.bye||!netInMatch()){NET.conn=null;
     if(netInMatch()){const who=NET.oppName||'Your opponent';netStatus('gone',who+' left the game.');
-      const r=document.querySelector('.overlay.end [data-act=nrematch]');if(r){r.disabled=true;r.textContent=who+' left';toast(esc(who)+' left the game.');}return;}
-    // still in the lobby: the host keeps its code open, the guest tries again while the join window lasts
-    if(NET.role=='host'&&NET.peer&&!NET.peer.destroyed)return netStatus('waiting','The connection closed. Waiting for your friend to join again…');
+      const r=document.querySelector('.overlay.end [data-act=nrematch]');if(r){r.disabled=true;r.textContent=who+' left';}toast(esc(who)+' left the game.');netBar();return;}
+    // still in the lobby: the host keeps its code open, the guest tries again while the join window lasts (not after
+    // it was refused or gave up: that message stays)
+    if(NET.role=='host'&&(NET.peer&&!NET.peer.destroyed||netRelayUp()))return netStatus('waiting','The connection closed. Waiting for your friend to join again…');
+    if(NET.role=='guest'&&(NET.refused||NET.stopDial||NET.status=='error'))return;
     if(NET.role=='guest'&&Date.now()<NET.joinUntil){netStatus('loading','The connection closed. Trying again…');return netDial(true);}
     return netStatus('error','The connection closed.');}
   if(NET.status=='gone')return netBar();
   // the 90 s run from the first drop: a line that opens but is refused does not restart it
   if(NET.status!='lost'||!NET.lostAt){NET.status='lost';NET.lostAt=Date.now();}
-  netBar();
-  // the guest dials the host again; the host waits for them
-  if(!NET.retry){let k=0;NET.retry=setInterval(()=>{
-    if(NET.status=='connected'&&NET.linked){clearInterval(NET.retry);NET.retry=null;return;}
-    if(Date.now()-NET.lostAt>90000){clearInterval(NET.retry);NET.retry=null;NET.status='gone';netBar();return;}
-    if(NET.role=='guest'&&++k%4==0)netDial();
-    netBar();},1000);}
+  netBar();netRetry();
+  if(NET.via!='relay')NET.noDirect=false;   // a direct game first tries direct again
   if(NET.role=='guest')netDial(true);
+}
+// while the line is down: the bar counts down 90 s, the guest dials again, the host waits
+function netRetry(){
+  if(NET.retry)return;let k=0;NET.retry=setInterval(()=>{
+    if(NET.status=='connected'&&NET.linked){clearInterval(NET.retry);NET.retry=null;return;}
+    if(Date.now()-NET.lostAt>90000){clearInterval(NET.retry);NET.retry=null;NET.status='gone';if(NET.role=='guest')netRelayStop();netBar();return;}
+    if(NET.role=='guest'&&++k%4==0)netDial();
+    netBar();},1000);
 }
 // back from another app, the lock screen or a network change: check the matchmaking connection and redial
 function netWake(){
   if(document.hidden)return;
   const p=NET.peer,away=NET.hiddenAt?Date.now()-NET.hiddenAt:0;NET.hiddenAt=0;
-  if(!p||!NET.role||NET.status=='idle')return;
-  if(p.destroyed){                                   // never got onto the matchmaking server
-    if(netInMatch())return;
-    if(NET.role=='host'&&NET.status!='error'){clearTimeout(NET.rcT);return netHostPeer(0);}
-    if(NET.role=='guest'&&Date.now()<NET.joinUntil){clearTimeout(NET.rcT);return netGuestPeer();}
-    return;}
-  const ws=p.socket&&p.socket._socket;
-  if(p.disconnected){clearTimeout(NET.rcT);NET.rcN=0;try{p.reconnect();}catch(e){}netSettle(p);}
-  else if((p.open||p.__opened)&&(!ws||ws.readyState>1||(NET.role=='host'&&!netInMatch()&&away>5000))){
-    // the phone may have dropped the socket while asleep, or the server our registration: register again
-    // (same code and token, so the server accepts it at once)
-    clearTimeout(NET.rcT);NET.rcN=0;try{p.disconnect();p.reconnect();}catch(e){}netSettle(p);}
+  if(!NET.role||NET.status=='idle')return;
+  if(typeof rlyWake=='function')rlyWake();
+  if(p&&p.destroyed){                                // never got onto the matchmaking server
+    if(!netInMatch()){
+      if(NET.role=='host'&&NET.status!='error'){clearTimeout(NET.rcT);netHostPeer(0);}
+      else if(NET.role=='guest'&&Date.now()<NET.joinUntil){clearTimeout(NET.rcT);netGuestPeer();}}}
+  else if(p){const ws=p.socket&&p.socket._socket;
+    if(p.disconnected){clearTimeout(NET.rcT);NET.rcN=0;try{p.reconnect();}catch(e){}netSettle(p);}
+    else if((p.open||p.__opened)&&(!ws||ws.readyState>1||(NET.role=='host'&&!netInMatch()&&away>5000))){
+      // the phone may have dropped the socket while asleep, or the server our registration: register again
+      // (same code and token, so the server accepts it at once)
+      clearTimeout(NET.rcT);NET.rcN=0;try{p.disconnect();p.reconnect();}catch(e){}netSettle(p);}}
   if(NET.role=='guest'&&!netLive()&&(netInMatch()?NET.status=='lost':Date.now()<NET.joinUntil&&NET.status!='error'))netDial(true);
   if(NET.status=='lost')netBar();
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){NET.hiddenAt=Date.now();netKeepHost();}else netWake();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){NET.hiddenAt=Date.now();if(NET.match)NET.match.pickRun=0;netKeepHost();netSave();}else netWake();});
+addEventListener('pagehide',()=>netSave());
 addEventListener('pageshow',e=>{if(e.persisted)netWake();});
 addEventListener('online',()=>netWake());
 // a slim status bar while something is wrong with the connection: over the board, or over the between-games screen
@@ -4722,20 +5235,20 @@ function netBar(){
   if(NET.status!='lost'&&NET.status!='gone'){if(b)b.remove();return;}
   if(!b){b=document.createElement('div');b.className='netbar';document.body.appendChild(b);}
   const gone=NET.status=='gone',s=Math.max(0,90-Math.round((Date.now()-NET.lostAt)/1000));
-  const claim=M&&M.winner==null&&M.phase!='stopped'?`<button class="btn sm pri" data-act="nclaim">${M.need>1?'Claim the match':'Claim the win'}</button>`:'';
+  const claim=M&&M.winner==null&&M.phase!='stopped'&&(M.results.length||G&&G.online&&G.mid===M.mid)?`<button class="btn sm pri" data-act="nclaim">${M.need>1?'Claim the match':'Claim the win'}</button>`:'';
   const h=gone?`<span>${esc(NET.oppName||'Your opponent')} is gone.</span>${claim}<button class="btn sm" data-act="nleave">Leave</button>`
     :`<span class="spin sm"></span><span>Connection lost. Reconnecting… ${s}s</span>`;
   if(b._h!==h){b._h=h;b.innerHTML=h;}
 }
 // the opponent is gone: a result already on the board stands; whatever is left of the match is ours
 function netClaim(){
-  const M=NET.match,G=UI.G;if(!M||M.winner!=null||M.phase=='stopped')return;
+  const M=NET.match,G=UI.G;if(!M||M.winner!=null||M.phase=='stopped'||!(M.results.length||G&&G.online&&G.mid===M.mid))return;
   const live=G&&G.online&&G.mid===M.mid;
   if(live&&G.winner!=null&&G.winner>=0&&!G.recorded)netRecord(G);
   if(M.winner==null){M.conceded=1;M.claimed=true;
     if(live&&G.winner==null){G.winner=0;G.reason=nOpp()+' left the game.';G.how='disconnect';netRecord(G);renderTable();}
     else{M.winner=0;M.phase='over';}}
-  netPickStop();if(NET.role=='host')netSendGend(G&&G.gid);matchFinish(M);netBar();netShowEnd();
+  netPickStop();if(NET.role=='host')netSendGend(G&&G.gid);else netGuestStop();matchFinish(M);netBar();netShowEnd();
 }
 // leaving concedes what is unfinished: the game in progress and, in best of 3, the match
 function netLeaveSend(){
@@ -4832,25 +5345,35 @@ function netLobby(){
       <div class="rw"><input type="text" id="ncode" maxlength="300" placeholder="6-letter code" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Game code" value="${esc(NET.role=='guest'?NET.code:(NET.joinCode||''))}">
       <button class="btn pri" data-act="njoin">Join</button></div><div class="olbody" id="oljoin"></div></section>
   </div>
-  <details class="olhelp" ${NET.helpOpen?'open':''}><summary>Connection help / relay server</summary>
+  <details class="olhelp" ${NET.helpOpen?'open':''}><summary>Connection help</summary>
     <ul>
       <li>On iPhone, send the code with <b>Invite</b> and stay on this page until your friend joins. If you switch apps, come back to Leyline: the game waits for you.</li>
-      <li>Both on the same Wi-Fi works best. On mobile data the two devices often cannot reach each other directly. A relay server fixes that.</li>
+      <li>Leyline first connects your devices directly. If that does not work within a few seconds (some Wi-Fi, mobile data, school or office networks), it switches to the built-in <b>relay</b>: free public servers pass the moves along, encrypted with a key made from the game code. The game shows <b>Direct</b> or <b>Relay</b>.</li>
       <li>Both players need the same version: if in doubt, both refresh the page.</li></ul>
-    <p class="mute">Relay server (TURN). One of you is enough. Free accounts: Metered (metered.ca) or Cloudflare. Paste the address, username and password they give you. They are saved on this device only.</p>
+    <label class="olchk"><input type="checkbox" id="nrlyon" ${typeof rlyOff=='function'&&!rlyOff()?'checked':''}> Use the built-in relay servers when needed</label>
+    <div class="olst" id="olrlyst"></div>
+    <details class="oladv" ${NET.advOpen?'open':''}><summary>Advanced: your own servers</summary>
+    <p class="mute">Your own relay server (MQTT over a secure WebSocket) is used besides the built-in ones. Both players need it. Saved on this device.</p>
+    <label class="ollab">Relay server (MQTT)<input type="text" id="nbroker" placeholder="wss://broker.example.com/mqtt" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" value="${esc(NET.brokerDraft!=null?NET.brokerDraft:typeof rlyMine=='function'?rlyMine():'')}"></label>
+    <p class="mute">Relay server for direct connections (TURN). One of you is enough. Free accounts: Metered (metered.ca) or Cloudflare. Paste the address, username and password they give you. They are saved on this device only.</p>
     <div class="olrelay">
       <label class="ollab">Server address<input type="text" id="nturn" placeholder="turn:server:port" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" value="${v('url')}"></label>
       <div class="olrelay2"><label class="ollab">Username<input type="text" id="nturnuser" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" value="${v('user')}"></label>
       <label class="ollab">Password<input type="password" id="nturnpass" autocomplete="off" value="${v('pass')}"></label></div>
       <div class="rw"><button class="btn sm pri" data-act="nrelaysave">Save</button><button class="btn sm" data-act="nrelaytest">Test</button><button class="btn sm" data-act="nrelayclear">Remove</button></div>
-      <div class="olst" id="olrelayst"></div></div>
+      <div class="olst" id="olrelayst"></div></div></details>
   </details>
-  <p class="mute olnote">Your browsers connect directly to each other. Both players need the same version of Leyline. Games use your own decks. Rewards are as vs the AI: a single game pays 2 packs for a win and 1 for a loss; a best of 3 pays 5 for a match win and, for a loss, 1 per game played to the end; a conceded game pays nothing.</p>`;
+  <p class="mute olnote">Your browsers connect directly to each other, or through the encrypted relay when they cannot. Both players need the same version of Leyline. Games use your own decks. Rewards are as vs the AI: a single game pays 2 packs for a win and 1 for a loss; a best of 3 pays 5 for a match win and, for a loss, 1 per game played to the end; a conceded game pays nothing.</p>`;
 }
 function netStatusHTML(){
   if(NET.status=='idle')return '';
-  const spin=NET.status=='loading'||NET.status=='waiting'||(NET.status=='connected'&&!netInMatch());
-  return `<div class="olst ${NET.status}">${spin?'<span class="spin sm"></span>':''}<span>${esc(NET.msg||{waiting:'Waiting for your friend to join…',connected:'Connected.',error:'Something went wrong.',loading:'Connecting…'}[NET.status]||'')}</span></div>`;
+  const spin=NET.status=='loading'||NET.status=='waiting'||(NET.status=='connected'&&!netInMatch()),via=NET.status=='connected'&&netVia();
+  return `<div class="olst ${NET.status}">${spin?'<span class="spin sm"></span>':''}<span>${esc(NET.msg||{waiting:'Waiting for your friend to join…',connected:'Connected.',error:'Something went wrong.',loading:'Connecting…'}[NET.status]||'')}${via?` <small class="olvia">${via}</small>`:''}</span></div>`;
+}
+function netRelayLine(){
+  if(typeof rlyOK!='function'||!rlyOK())return 'Relay: not available here (it needs an https:// page). Direct connections only.';
+  const n=rlyEndpoints().length,who=(rlyOff()?'your own server':n+' server')+(n>1?'s':'');if(!n)return 'Relay: off. Direct connections only.';
+  return 'Relay: on ('+who+')'+(RLY.on?' · '+rlyUp()+' of '+RLY.brk.length+' reachable now':'. Used when a direct connection does not work.');
 }
 function paintOnline(){
   const el=$('#olb');if(!el)return;
@@ -4876,7 +5399,18 @@ function paintOnline(){
   // a new error or status in the panel in use is scrolled into view (phones stack the panels)
   const key=NET.role+'|'+st;if(key!==NET.painted){NET.painted=key;const box=guest?jb:host?hb:null;
     if(box&&st!='idle'&&box.scrollIntoView)try{box.scrollIntoView({block:'nearest'});}catch(e){}}
-  const rs=$('#olrelayst');if(rs){const rl=netRelays();rs.textContent=rl.length?'Relay: on ('+[...new Set(rl.map(x=>x.src))].join(', ')+')':'Relay: off. Direct connections only.';}
+  const rs=$('#olrelayst');if(rs){const rl=netRelays();rs.textContent=rl.length?'TURN server: on ('+[...new Set(rl.map(x=>x.src))].join(', ')+')':'TURN server: none.';}
+  const ry=$('#olrlyst');if(ry){const t=netRelayLine();if(ry.textContent!==t)ry.textContent=t;}
+}
+// the relay settings changed: a game code that is open (host) or being joined (guest) uses the new servers at once;
+// during a match the change waits for the next one (returns false then)
+function netRelayApplyNow(){
+  if(netInMatch())return false;
+  if(NET.role=='host')netRelayListen();
+  else if(NET.role=='guest')netRelayStop();
+  if(typeof rlyRestart=='function')rlyRestart();
+  if(NET.role=='guest'&&NET.status=='loading')netRelayDial();
+  return true;
 }
 function netRelayForm(){const g=id=>(($(id)||{}).value||'').trim();return {url:g('#nturn'),user:g('#nturnuser'),pass:g('#nturnpass')};}
 // accept a pasted snippet from the provider's dashboard: the turn: addresses plus username and credential
@@ -4905,14 +5439,22 @@ function netRelayTest(){
 document.addEventListener('change',e=>{
   if(e.target.id=='ndeck'){NET.deckSel=e.target.value;try{localStorage.setItem('ll_netdeck',NET.deckSel);}catch(x){}}
   if(e.target.id=='nname'){const n=cleanName(e.target.value);e.target.value=n;try{localStorage.setItem('ll_name',n);}catch(x){}}
+  if(e.target.id=='nrlyon'){try{e.target.checked?localStorage.removeItem('ll_norelay'):localStorage.setItem('ll_norelay','1');}catch(x){}
+    const now=netRelayApplyNow();
+    toast((e.target.checked?'Relay on.':rlyEndpoints().length?'Built-in relay off. Your own relay server is still used.':'Relay off: direct connections only.')+(now?'':' This applies from your next game.'));paintOnline();}
+  if(e.target.id=='nbroker'){const v=e.target.value.trim(),ok=rlyParse(v);NET.brokerDraft=null;
+    if(v&&!ok.length){toast('Enter an address that starts with wss://');return;}
+    try{v?localStorage.setItem('ll_broker',ok.map(x=>x.user!=null?x.url.replace('://','://'+encodeURIComponent(x.user)+':'+encodeURIComponent(x.pass)+'@'):x.url).join(' ')):localStorage.removeItem('ll_broker');}catch(x){}
+    const now=netRelayApplyNow();toast((v?'Relay server saved.':'Relay server removed.')+(now?'':' This applies from your next game.'));paintOnline();}
 });
 document.addEventListener('input',e=>{
   const id=e.target.id;
   if(id=='ncode'){const v=e.target.value,c=netCodeFrom(v);if(c&&v!==c&&(v.length>6||/[^A-Za-z0-9]/.test(v)))e.target.value=c;NET.joinCode=e.target.value;NET.fromLink=false;}
   if(id=='nturn'||id=='nturnuser'||id=='nturnpass')NET.relayDraft=netRelayForm();
+  if(id=='nbroker')NET.brokerDraft=e.target.value;
 });
 document.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='ncode'){e.preventDefault();const b=$('[data-act=njoin]');if(b&&!b.disabled)b.click();}});
-document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('olhelp'))NET.helpOpen=e.target.open;},true);
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('olhelp'))NET.helpOpen=e.target.open;if(e.target.classList&&e.target.classList.contains('oladv'))NET.advOpen=e.target.open;},true);
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   switch(b.dataset.act){
@@ -4949,9 +5491,16 @@ go=function(s){
   } else if(UI.screen=='online'&&s!='online'&&NET.role){if(NET.match)netLeaveSend();netReset();}   // left the lobby (or the coin toss)
   return _netGo(s);
 };
-// opening an invite link goes to the lobby; a host whose tab was reloaded gets the same game code back
-if(netParams().get('join'))setTimeout(()=>{if(UI.screen=='menu')go('online');},50);
-else{const h=netSavedHost();if(h)setTimeout(()=>{if(UI.screen=='menu'&&!NET.role){go('online');netHost(h);}},60);}
+// a reloaded guest gets its match back (also on the invite link it joined with), an invite link opens the lobby,
+// a reloaded host gets its game code back
+// (a guest whose page reloaded in the lobby or during the coin toss joins the same code again; with both a host and a
+// guest record, as two tabs of one browser leave, this tab's own role decides)
+{const j=netParams().get('join'),gg=netSavedGuest('guest'),gh=netSavedGuest('host');let r='';try{r=sessionStorage.getItem('ll_role')||'';}catch(e){}
+  const g=r=='host'?gh:r=='guest'?gg:gg&&gh?(gh.t>gg.t?gh:gg):gg||gh,h=!g&&!j&&r!='guest'&&netSavedHost();
+  if(g&&(!j||netCodeFrom(j)===g.code))setTimeout(()=>{if(UI.screen=='menu'&&!NET.role&&!document.querySelector('.overlay')){
+    if(g.lite){go('online');netJoin(g.code);}else if(g.role=='host')netResumeHost(g);else netResume(g);}},60);
+  else if(j)setTimeout(()=>{if(UI.screen=='menu')go('online');},50);
+  else if(h)setTimeout(()=>{if(UI.screen=='menu'&&!NET.role){go('online');netHost(h);}},60);}
 
 </script>
 <script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!window.claude&&!/(^|\.)claude(usercontent)?\.(ai|com)$/.test(location.hostname))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('Leyline: offline mode is not available here',e)));</script></body></html>
